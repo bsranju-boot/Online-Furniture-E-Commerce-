@@ -77,14 +77,10 @@ function showCart() {
   box.innerHTML = h; if (sum) sum.textContent = "$" + total;
 }
 
-// Validate form and place order
+// Validate form and place order directly to database
 async function checkout(event) {
   event.preventDefault();
   var err = document.getElementById("form-error");
-  if (typeof getCurrentUser === "function") {
-    var user = await getCurrentUser();
-    if (!user) { window.location.href = "login.html?redirect=checkout.html"; return; }
-  }
   var name = document.getElementById("cust-name").value.trim(), phone = document.getElementById("cust-phone").value.trim(), addr = document.getElementById("cust-address").value.trim();
   if (!name || !phone || !addr) { err.textContent = "Please complete all fields to proceed with your order."; return; }
   if (phone.length !== 10 || isNaN(phone)) { err.textContent = "Please enter a valid 10-digit phone number."; return; }
@@ -94,10 +90,10 @@ async function checkout(event) {
   for (var i = 0; i < cart.length; i++) total += cart[i].price * cart[i].quantity;
   var orderId = "AURA-" + Math.floor(10000 + Math.random() * 90000);
 
-  if (typeof saveOrderToDB === "function" && user) {
+  if (typeof saveOrderToDB === "function") {
     var btn = document.getElementById("checkout-submit-btn");
     if (btn) btn.textContent = "Processing Order...";
-    var orderData = { id: orderId, user_id: user.id, customer_name: name, phone: phone, address: addr, total: total };
+    var orderData = { id: orderId, customer_name: name, phone: phone, address: addr, total: total };
     var res = await saveOrderToDB(orderData, cart);
     if (!res.success && res.error) {
       if (btn) btn.textContent = "Complete Purchase";
@@ -112,75 +108,58 @@ async function checkout(event) {
   document.getElementById("confirmed-name").textContent = name; document.getElementById("confirmed-phone").textContent = phone; document.getElementById("confirmed-address").textContent = addr;
 }
 
-// Update authentication state in navbar
-async function updateNavAuth() {
-  var item = document.getElementById("nav-auth-item"); if (!item || typeof getCurrentUser !== "function") return;
-  var user = await getCurrentUser();
-  if (user && user.email) {
-    var shortEmail = user.email.split("@")[0];
-    item.innerHTML = '<a href="my-orders.html" title="' + user.email + '">' + shortEmail + '</a> <button onclick="signOutUser()" class="btn-link" style="margin-left: 8px; font-size: 11px;">Logout</button>';
-  } else {
-    item.innerHTML = '<a href="login.html">Login</a>';
-  }
-}
-
-// Load and show product reviews
+// Load and show product reviews directly inside product details
 async function showReviews(productId) {
-  var listEl = document.getElementById("reviews-list"), sumEl = document.getElementById("reviews-summary"), formGate = document.getElementById("review-auth-gate");
+  var listEl = document.getElementById("reviews-list"), sumEl = document.getElementById("reviews-summary");
   if (!listEl || typeof getReviewsForProduct !== "function") return;
-  var user = typeof getCurrentUser === "function" ? await getCurrentUser() : null;
-  if (formGate) {
-    if (user) {
-      formGate.innerHTML = '<form id="review-form" onsubmit="postReview(event, ' + productId + ')"><div class="form-group"><label>Rating (1-5 Stars)</label><select id="review-rating" style="background:#1a1a1a;color:var(--text-main);padding:10px;border-radius:12px;border:1px solid var(--gold-border);width:100%;"><option value="5">★★★★★ - Exceptional (5)</option><option value="4">★★★★☆ - Very Good (4)</option><option value="3">★★★☆☆ - Average (3)</option><option value="2">★★☆☆☆ - Below Expectation (2)</option><option value="1">★☆☆☆☆ - Poor (1)</option></select></div><div class="form-group"><label>Your Feedback</label><textarea id="review-comment" rows="3" placeholder="Share your experience with this design..." required></textarea></div><button type="submit" class="btn btn-full">Submit Impression</button></form>';
-    } else {
-      formGate.innerHTML = '<p class="empty-msg" style="padding: 10px;">Please <a href="login.html?redirect=details.html?id=' + productId + '" class="btn-link">log in</a> to share your review.</p>';
-    }
-  }
+
   var reviews = await getReviewsForProduct(productId);
   if (!reviews || !reviews.length) {
-    if (sumEl) sumEl.innerHTML = '<span style="color:var(--text-muted);font-size:14px;">No reviews yet. Be the first to review!</span>';
-    listEl.innerHTML = '<p class="empty-msg">No client reviews posted yet.</p>';
+    if (sumEl) sumEl.innerHTML = '<span style="color:var(--text-muted);font-size:14px;">No reviews yet. Be the first client to review!</span>';
+    listEl.innerHTML = '<p class="empty-msg">No client reviews yet. Share your impression below!</p>';
     return;
   }
   var totalRating = 0;
   for (var i = 0; i < reviews.length; i++) totalRating += reviews[i].rating;
   var avg = (totalRating / reviews.length).toFixed(1);
-  if (sumEl) sumEl.innerHTML = '<span class="gold-text" style="font-size:20px;font-weight:bold;">★ ' + avg + ' / 5.0</span> <span style="color:var(--text-muted);font-size:13px;margin-left:8px;">(' + reviews.length + ' reviews)</span>';
+  if (sumEl) sumEl.innerHTML = '<span class="gold-text" style="font-size:22px;font-weight:bold;">★ ' + avg + ' / 5.0</span> <span style="color:var(--text-muted);font-size:14px;margin-left:10px;">(' + reviews.length + ' verified reviews)</span>';
+
   var h = "";
   for (var i = 0; i < reviews.length; i++) {
     var r = reviews[i];
     var stars = "★★★★★".substring(0, r.rating) + "☆☆☆☆☆".substring(0, 5 - r.rating);
     var dateStr = new Date(r.created_at).toLocaleDateString();
-    h += '<div class="review-card" style="background:var(--card-bg);border:1px solid var(--gold-border);border-radius:var(--radius-main);padding:18px;margin-bottom:15px;"><div style="display:flex;justify-content:space-between;margin-bottom:8px;"><strong style="font-size:14px;">' + r.user_email.split("@")[0] + '</strong><span style="color:var(--gold-light);letter-spacing:2px;">' + stars + '</span></div><p style="font-size:14px;color:var(--text-main);margin-bottom:8px;">' + r.comment + '</p><div style="display:flex;justify-content:space-between;align-items:center;"><small style="color:var(--text-muted);font-size:11px;">' + dateStr + '</small>';
-    if (user && user.id === r.user_id) {
-      h += '<button onclick="removeReview(' + r.id + ',' + productId + ')" class="btn-link" style="font-size:11px;color:#e74c3c;">Delete</button>';
-    }
-    h += '</div></div>';
+    h += '<div class="review-card" style="background:var(--card-bg);border:1px solid var(--gold-border);border-radius:var(--radius-main);padding:18px;margin-bottom:15px;"><div style="display:flex;justify-content:space-between;margin-bottom:8px;"><strong style="font-size:15px;color:var(--gold-light);">' + (r.reviewer_name || 'Anonymous Client') + '</strong><span style="color:var(--gold-light);letter-spacing:2px;">' + stars + '</span></div><p style="font-size:14px;color:var(--text-main);margin-bottom:8px;">' + r.comment + '</p><small style="color:var(--text-muted);font-size:11px;">' + dateStr + '</small></div>';
   }
   listEl.innerHTML = h;
 }
 
-// Post a new review
+// Post a review directly without sign in
 async function postReview(event, productId) {
   event.preventDefault();
+  var name = document.getElementById("reviewer-name").value.trim();
   var rating = parseInt(document.getElementById("review-rating").value);
   var comment = document.getElementById("review-comment").value.trim();
-  var user = await getCurrentUser();
-  if (!user || !comment) return;
-  var res = await insertReview({ product_id: productId, user_id: user.id, user_email: user.email, rating: rating, comment: comment });
-  if (res.success) { showReviews(productId); } else { alert("Failed to post review: " + res.error); }
-}
+  var errEl = document.getElementById("review-form-error");
+  if (errEl) errEl.textContent = "";
 
-// Remove an existing review
-async function removeReview(reviewId, productId) {
-  if (!confirm("Are you sure you want to remove your review?")) return;
-  var res = await deleteReview(reviewId);
-  if (res.success) { showReviews(productId); } else { alert("Failed to delete review: " + res.error); }
+  if (!name || !comment) {
+    if (errEl) errEl.textContent = "Please provide your name and comments.";
+    return;
+  }
+
+  var res = await insertReview({ product_id: productId, reviewer_name: name, rating: rating, comment: comment });
+  if (res.success) {
+    document.getElementById("review-comment").value = "";
+    showReviews(productId);
+  } else {
+    if (errEl) errEl.textContent = "Failed to post review: " + res.error;
+    else alert("Failed to post review: " + res.error);
+  }
 }
 
 window.addEventListener("DOMContentLoaded", async function () {
   saveCart(getCart());
-  updateNavAuth();
 
   if (typeof getProductsFromDB === "function") {
     var dbProds = await getProductsFromDB();
