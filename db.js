@@ -1,6 +1,6 @@
 // Initialize Supabase Client
-var SUPABASE_URL = "https://YOUR_PROJECT_ID.supabase.co";
-var SUPABASE_ANON_KEY = "YOUR_ANON_KEY";
+var SUPABASE_URL = "https://qtjuujbvcjiansiuyhth.supabase.co";
+var SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF0anV1amJ2Y2ppYW5zaXV5aHRoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTE0MzQzNzYsImV4cCI6MjEwNzAxMDM3Nn0.t_XU3GMS5ZcZXWTxozdJG0hCn_gpyIU7VuM4FvXurNY";
 
 var db = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
 
