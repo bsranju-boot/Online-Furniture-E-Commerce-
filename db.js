@@ -3,6 +3,7 @@ var SUPABASE_ANON_KEY = "sb_publishable_6Nbb1RcUY_yVe99QEM9jjA_iwHFnU07";
 var ADMIN_EMAIL = "admin@aura.com";
 var db = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
 
+
 // Local furniture products catalog
 var products = [
   { id: 1, name: "Imperial Velvet Sofa", price: 125000, category: "Sofa", image: "images/sofa1.jpg", description: "Tufted velvet sofa with brass legs." },
