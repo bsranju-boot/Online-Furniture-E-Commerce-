@@ -20,7 +20,9 @@ CREATE TABLE IF NOT EXISTS public.orders (
   name TEXT NOT NULL,
   phone TEXT NOT NULL,
   address TEXT NOT NULL,
-  items JSONB NOT NULL,
+  payment_method TEXT NOT NULL DEFAULT 'COD',
+  payment_status TEXT NOT NULL DEFAULT 'Pending',
+  items JSONB NOT NULL DEFAULT '[]'::jsonb,
   total NUMERIC NOT NULL DEFAULT 0,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );

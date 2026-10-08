@@ -157,25 +157,36 @@ async function removeReview(id) {
 }
 
 // Save complete customer order in Supabase
-async function saveOrder(name, phone, address, cart) {
+async function saveOrder(name, phone, address, cart, paymentMethod) {
   var user = getCurrentUser();
   if (!user) return { success: false, error: "Must be logged in to place an order." };
   var total = 0;
   for (var i = 0; i < cart.length; i++) total += cart[i].price * cart[i].quantity;
   var orderId = "AURA-" + Math.floor(10000 + Math.random() * 90000);
+  var method = paymentMethod || "COD";
+  var status = (method === "COD") ? "Pending (COD)" : "Paid (" + method + ")";
   try {
     if (!db) return { success: false, error: "Database not connected." };
-    var res = await db.from("orders").insert([{
+    var payload = {
       id: orderId,
       user_id: user.id,
       name: clean(name),
       phone: clean(phone),
       address: clean(address),
+      payment_method: method,
+      payment_status: status,
       items: cart,
       total: total
-    }]);
-    if (res.error) throw res.error;
-    return { success: true, orderId: orderId };
+    };
+    var res = await db.from("orders").insert([payload]);
+    if (res.error) {
+      // If payment_method column doesn't exist yet, retry with base fields
+      delete payload.payment_method;
+      delete payload.payment_status;
+      res = await db.from("orders").insert([payload]);
+      if (res.error) throw res.error;
+    }
+    return { success: true, orderId: orderId, paymentMethod: method };
   } catch (err) {
     return { success: false, error: err.message };
   }

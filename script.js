@@ -85,16 +85,34 @@ async function checkout(event) {
   var name = document.getElementById("cust-name").value.trim();
   var phone = document.getElementById("cust-phone").value.trim();
   var addr = document.getElementById("cust-address").value.trim();
+  var payMethod = document.getElementById("cust-payment") ? document.getElementById("cust-payment").value : "COD";
 
   if (!name || !phone || !addr) { err.textContent = "Please complete all fields to proceed with your order."; return; }
   if (phone.length !== 10 || isNaN(phone)) { err.textContent = "Please enter a valid 10-digit phone number."; return; }
+
+  // Validate specific payment details
+  if (payMethod === "UPI") {
+    var upiVal = document.getElementById("upi-id") ? document.getElementById("upi-id").value.trim() : "";
+    if (!upiVal || upiVal.indexOf("@") === -1) {
+      err.textContent = "Please enter a valid UPI ID (e.g. name@upi).";
+      return;
+    }
+  } else if (payMethod === "Card") {
+    var cardNum = document.getElementById("card-num") ? document.getElementById("card-num").value.trim() : "";
+    var cardCvv = document.getElementById("card-cvv") ? document.getElementById("card-cvv").value.trim() : "";
+    if (cardNum.length < 12 || !cardCvv) {
+      err.textContent = "Please enter complete Card Number and CVV.";
+      return;
+    }
+  }
+
   var cart = getCart();
   if (!cart.length) { err.textContent = "Your cart is empty. Please select furniture pieces before checking out."; return; }
 
   var btn = document.getElementById("checkout-submit-btn");
   if (btn) { btn.disabled = true; btn.textContent = "Processing Order..."; }
 
-  var res = await saveOrder(name, phone, addr, cart);
+  var res = await saveOrder(name, phone, addr, cart, payMethod);
   if (!res.success) {
     if (btn) { btn.disabled = false; btn.textContent = "Complete Purchase"; }
     err.textContent = res.error;
@@ -108,6 +126,11 @@ async function checkout(event) {
   document.getElementById("confirmed-name").textContent = name;
   document.getElementById("confirmed-phone").textContent = phone;
   document.getElementById("confirmed-address").textContent = addr;
+  var payConfirm = document.getElementById("confirmed-payment");
+  if (payConfirm) {
+    var labels = { UPI: "UPI Payment", COD: "Cash on Delivery (COD)", Card: "Credit / Debit Card", NetBanking: "Net Banking" };
+    payConfirm.textContent = labels[payMethod] || payMethod;
+  }
 }
 
 window.addEventListener("DOMContentLoaded", function () {

@@ -44,6 +44,50 @@
           <textarea id="cust-address" rows="4" placeholder="Enter your full residential or delivery address" required></textarea>
         </div>
 
+        <div class="form-group">
+          <label for="cust-payment">Payment Method</label>
+          <select id="cust-payment" onchange="togglePaymentDetails(this.value)" style="width: 100%; background-color: #0c0c0c; border: 1px solid var(--gold-border); color: var(--text-main); padding: 14px 20px; border-radius: var(--radius-main); font-family: var(--font-body); font-size: 14px; outline: none;">
+            <option value="UPI">UPI (Google Pay, PhonePe, Paytm, BHIM)</option>
+            <option value="COD" selected>Cash on Delivery (COD)</option>
+            <option value="Card">Credit / Debit Card</option>
+            <option value="NetBanking">Net Banking</option>
+          </select>
+        </div>
+
+        <!-- Dynamic Payment Inputs -->
+        <div id="upi-details" style="display: none; background: #0c0c0c; border: 1px solid var(--gold-border); border-radius: var(--radius-main); padding: 16px; margin-bottom: 20px;">
+          <label for="upi-id" style="font-size: 12px; text-transform: uppercase; letter-spacing: 1px; color: var(--gold-light); display: block; margin-bottom: 8px;">Enter Virtual Payment Address (UPI ID)</label>
+          <input type="text" id="upi-id" placeholder="username@okhdfcbank / mobile@upi" style="width: 100%; background: #161616; border: 1px solid var(--gold-border); color: #fff; padding: 12px; border-radius: 12px;">
+        </div>
+
+        <div id="card-details" style="display: none; background: #0c0c0c; border: 1px solid var(--gold-border); border-radius: var(--radius-main); padding: 16px; margin-bottom: 20px;">
+          <div style="margin-bottom: 12px;">
+            <label style="font-size: 11px; text-transform: uppercase; color: var(--gold-light); display: block; margin-bottom: 6px;">Card Number</label>
+            <input type="text" id="card-num" placeholder="XXXX XXXX XXXX XXXX" maxlength="19" style="width: 100%; background: #161616; border: 1px solid var(--gold-border); color: #fff; padding: 10px; border-radius: 10px;">
+          </div>
+          <div style="display: flex; gap: 12px;">
+            <div style="flex: 1;">
+              <label style="font-size: 11px; text-transform: uppercase; color: var(--gold-light); display: block; margin-bottom: 6px;">Expiry</label>
+              <input type="text" id="card-exp" placeholder="MM/YY" maxlength="5" style="width: 100%; background: #161616; border: 1px solid var(--gold-border); color: #fff; padding: 10px; border-radius: 10px;">
+            </div>
+            <div style="flex: 1;">
+              <label style="font-size: 11px; text-transform: uppercase; color: var(--gold-light); display: block; margin-bottom: 6px;">CVV</label>
+              <input type="password" id="card-cvv" placeholder="•••" maxlength="4" style="width: 100%; background: #161616; border: 1px solid var(--gold-border); color: #fff; padding: 10px; border-radius: 10px;">
+            </div>
+          </div>
+        </div>
+
+        <div id="netbanking-details" style="display: none; background: #0c0c0c; border: 1px solid var(--gold-border); border-radius: var(--radius-main); padding: 16px; margin-bottom: 20px;">
+          <label style="font-size: 12px; text-transform: uppercase; letter-spacing: 1px; color: var(--gold-light); display: block; margin-bottom: 8px;">Select Bank</label>
+          <select id="bank-name" style="width: 100%; background: #161616; border: 1px solid var(--gold-border); color: #fff; padding: 12px; border-radius: 12px;">
+            <option value="HDFC">HDFC Bank</option>
+            <option value="ICICI">ICICI Bank</option>
+            <option value="SBI">State Bank of India (SBI)</option>
+            <option value="Axis">Axis Bank</option>
+            <option value="Kotak">Kotak Mahindra Bank</option>
+          </select>
+        </div>
+
         <p id="form-error" class="error-msg"></p>
 
         <button type="submit" id="checkout-submit-btn" class="btn btn-full">Complete Purchase</button>
@@ -59,6 +103,7 @@
         <p><strong>Client Name:</strong> <span id="confirmed-name"></span></p>
         <p><strong>Contact Phone:</strong> <span id="confirmed-phone"></span></p>
         <p><strong>Delivery Destination:</strong> <span id="confirmed-address"></span></p>
+        <p><strong>Payment Mode:</strong> <span id="confirmed-payment" class="gold-text"></span></p>
       </div>
       <div style="margin-top: 25px; display: flex; gap: 15px; justify-content: center; flex-wrap: wrap;">
         <a href="products.html" class="btn">Continue Exploring &rarr;</a>
@@ -71,5 +116,12 @@
   </footer>
 
   <script src="script.js"></script>
+  <script>
+    function togglePaymentDetails(mode) {
+      document.getElementById('upi-details').style.display = (mode === 'UPI') ? 'block' : 'none';
+      document.getElementById('card-details').style.display = (mode === 'Card') ? 'block' : 'none';
+      document.getElementById('netbanking-details').style.display = (mode === 'NetBanking') ? 'block' : 'none';
+    }
+  </script>
 </body>
 </html>
