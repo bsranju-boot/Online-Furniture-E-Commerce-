@@ -3,7 +3,6 @@ var SUPABASE_ANON_KEY = "sb_publishable_6Nbb1RcUY_yVe99QEM9jjA_iwHFnU07";
 var ADMIN_EMAIL = "admin@aura.com";
 var db = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
 
-
 // Local furniture products catalog
 var products = [
   { id: 1, name: "Imperial Velvet Sofa", price: 125000, category: "Sofa", image: "images/sofa1.jpg", description: "Tufted velvet sofa with brass legs." },
@@ -92,22 +91,106 @@ async function logout() {
   window.location.href = "index.html";
 }
 
-// Update authentication link in navbar
+// Update authentication and role navigation links
 function showAuthLink() {
-  var el = document.getElementById("nav-auth");
-  if (!el) return;
+  var navLinks = document.querySelector(".nav-links");
   var user = getCurrentUser();
+
+  var oldOrders = document.getElementById("nav-orders");
+  if (oldOrders) oldOrders.parentElement.removeChild(oldOrders);
+  var oldProfile = document.getElementById("nav-profile");
+  if (oldProfile) oldProfile.parentElement.removeChild(oldProfile);
+  var oldAdmin = document.getElementById("nav-admin");
+  if (oldAdmin) oldAdmin.parentElement.removeChild(oldAdmin);
+
+  var authLink = document.getElementById("nav-auth");
+  if (!authLink) return;
+
   if (user) {
-    el.textContent = "Logout (" + user.name + ")";
-    el.href = "#";
-    el.onclick = function (e) {
+    authLink.textContent = "Logout (" + user.name + ")";
+    authLink.href = "#";
+    authLink.onclick = function (e) {
       e.preventDefault();
       logout();
     };
+
+    if (navLinks) {
+      var authLi = authLink.parentElement;
+
+      var liOrders = document.createElement("li");
+      liOrders.id = "nav-orders";
+      liOrders.innerHTML = '<a href="my-orders.html">My Orders</a>';
+      navLinks.insertBefore(liOrders, authLi);
+
+      var liProfile = document.createElement("li");
+      liProfile.id = "nav-profile";
+      liProfile.innerHTML = '<a href="profile.html">Profile</a>';
+      navLinks.insertBefore(liProfile, authLi);
+
+      if (isAdmin()) {
+        var liAdmin = document.createElement("li");
+        liAdmin.id = "nav-admin";
+        liAdmin.innerHTML = '<a href="admin.html">Admin</a>';
+        navLinks.insertBefore(liAdmin, authLi);
+      }
+    }
   } else {
-    el.textContent = "Login";
-    el.href = "login.html";
-    el.onclick = null;
+    authLink.textContent = "Login";
+    authLink.href = "login.html";
+    authLink.onclick = null;
+  }
+}
+
+// Load logged-in user profile from database
+async function getProfile() {
+  var user = getCurrentUser();
+  if (!user || !db) return { name: "", phone: "", address: "" };
+  try {
+    var res = await db.from("profiles").select("*").eq("id", user.id).maybeSingle();
+    if (res.error) throw res.error;
+    if (res.data) {
+      return {
+        name: res.data.name || "",
+        phone: res.data.phone || "",
+        address: res.data.address || ""
+      };
+    }
+    return { name: user.name || "", phone: "", address: "" };
+  } catch (err) {
+    return { name: user.name || "", phone: "", address: "" };
+  }
+}
+
+// Upsert user profile into database
+async function saveProfile(name, phone, address) {
+  var user = getCurrentUser();
+  if (!user) return { success: false, error: "Must be logged in to update profile." };
+  name = (name || "").trim();
+  phone = (phone || "").trim();
+  address = (address || "").trim();
+
+  if (!name) return { success: false, error: "Name cannot be empty." };
+  if (phone.length !== 10 || isNaN(phone)) return { success: false, error: "Phone number must be exactly 10 digits." };
+  if (!address) return { success: false, error: "Address cannot be empty." };
+
+  try {
+    if (!db) return { success: false, error: "Database not connected." };
+    var payload = {
+      id: user.id,
+      name: clean(name),
+      phone: clean(phone),
+      address: clean(address),
+      updated_at: new Date().toISOString()
+    };
+    var res = await db.from("profiles").upsert([payload]);
+    if (res.error) throw res.error;
+
+    user.name = name;
+    localStorage.setItem("aura_session", JSON.stringify(user));
+    showAuthLink();
+    return { success: true };
+  } catch (err) {
+    return { success: false, error: err.message };
   }
 }
 
@@ -162,31 +245,92 @@ async function saveOrder(name, phone, address, cart, paymentMethod) {
   if (!user) return { success: false, error: "Must be logged in to place an order." };
   var total = 0;
   for (var i = 0; i < cart.length; i++) total += cart[i].price * cart[i].quantity;
-  var orderId = "AURA-" + Math.floor(10000 + Math.random() * 90000);
+  var orderCode = "AURA-" + Math.floor(10000 + Math.random() * 90000);
+
+  var d = new Date();
+  d.setDate(d.getDate() + 5);
+  var deliveryDate = d.toISOString().split("T")[0];
+
   var method = paymentMethod || "COD";
-  var status = (method === "COD") ? "Pending (COD)" : "Paid (" + method + ")";
+  var status = "Placed";
+  var payStatus = (method === "COD") ? "Pending" : "Paid";
+
   try {
     if (!db) return { success: false, error: "Database not connected." };
     var payload = {
-      id: orderId,
+      id: orderCode,
+      order_code: orderCode,
       user_id: user.id,
       name: clean(name),
       phone: clean(phone),
       address: clean(address),
+      status: status,
+      delivery_date: deliveryDate,
       payment_method: method,
-      payment_status: status,
+      payment_status: payStatus,
       items: cart,
       total: total
     };
     var res = await db.from("orders").insert([payload]);
     if (res.error) {
-      // If payment_method column doesn't exist yet, retry with base fields
-      delete payload.payment_method;
-      delete payload.payment_status;
+      delete payload.order_code;
+      delete payload.delivery_date;
       res = await db.from("orders").insert([payload]);
       if (res.error) throw res.error;
     }
-    return { success: true, orderId: orderId, paymentMethod: method };
+    return { success: true, orderId: orderCode, orderCode: orderCode, deliveryDate: deliveryDate, items: cart, total: total };
+  } catch (err) {
+    return { success: false, error: err.message };
+  }
+}
+
+// Fetch orders placed by logged-in user
+async function getMyOrders() {
+  var user = getCurrentUser();
+  if (!user || !db) return [];
+  try {
+    var res = await db.from("orders").select("*").eq("user_id", user.id).order("created_at", { ascending: false });
+    if (res.error) throw res.error;
+    return res.data || [];
+  } catch (err) {
+    return [];
+  }
+}
+
+// Cancel placed order by customer
+async function cancelOrder(id) {
+  var user = getCurrentUser();
+  if (!user || !db) return { success: false, error: "Not logged in." };
+  try {
+    var res = await db.from("orders").update({ status: "Cancelled" }).eq("id", id).eq("status", "Placed");
+    if (res.error) throw res.error;
+    return { success: true };
+  } catch (err) {
+    return { success: false, error: err.message };
+  }
+}
+
+// Fetch all orders in database for admin
+async function getAllOrders() {
+  if (!isAdmin() || !db) return [];
+  try {
+    var res = await db.from("orders").select("*").order("created_at", { ascending: false });
+    if (res.error) throw res.error;
+    return res.data || [];
+  } catch (err) {
+    return [];
+  }
+}
+
+// Update order status and delivery date by admin
+async function updateOrder(id, status, deliveryDate) {
+  if (!isAdmin() || !db) return { success: false, error: "Admin access required." };
+  try {
+    var payload = { status: status };
+    if (deliveryDate) payload.delivery_date = deliveryDate;
+    var res = await db.from("orders").update(payload).eq("id", id);
+    if (res.error) throw res.error;
+    return { success: true };
   } catch (err) {
     return { success: false, error: err.message };
   }

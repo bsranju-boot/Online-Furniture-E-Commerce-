@@ -1,58 +1,64 @@
 -- =========================================================
--- SUPABASE SQL SCHEMA FOR AURA LUXURY FURNITURE
+-- ORDER MANAGEMENT & CUSTOMER PROFILE MIGRATION
+-- Run in Supabase SQL Editor
 -- =========================================================
 
--- 1. Reviews Table
-CREATE TABLE IF NOT EXISTS public.reviews (
-  id BIGSERIAL PRIMARY KEY,
-  product_id BIGINT NOT NULL,
-  user_id UUID NOT NULL DEFAULT auth.uid() REFERENCES auth.users(id) ON DELETE CASCADE,
-  user_name TEXT NOT NULL,
-  rating INT NOT NULL CHECK (rating >= 1 AND rating <= 5),
-  comment TEXT NOT NULL,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
-);
+-- 1. Update orders table with order_code, status and delivery_date
+ALTER TABLE public.orders ADD COLUMN IF NOT EXISTS order_code TEXT;
+ALTER TABLE public.orders ADD COLUMN IF NOT EXISTS status TEXT DEFAULT 'Placed';
+ALTER TABLE public.orders ADD COLUMN IF NOT EXISTS delivery_date DATE;
+ALTER TABLE public.orders ADD COLUMN IF NOT EXISTS payment_method TEXT DEFAULT 'COD';
+ALTER TABLE public.orders ADD COLUMN IF NOT EXISTS payment_status TEXT DEFAULT 'Pending';
 
--- 2. Orders Table
-CREATE TABLE IF NOT EXISTS public.orders (
-  id TEXT PRIMARY KEY,
-  user_id UUID NOT NULL DEFAULT auth.uid() REFERENCES auth.users(id) ON DELETE CASCADE,
+-- 2. Create customer profiles table
+CREATE TABLE IF NOT EXISTS public.profiles (
+  id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
   name TEXT NOT NULL,
   phone TEXT NOT NULL,
   address TEXT NOT NULL,
-  payment_method TEXT NOT NULL DEFAULT 'COD',
-  payment_status TEXT NOT NULL DEFAULT 'Pending',
-  items JSONB NOT NULL DEFAULT '[]'::jsonb,
-  total NUMERIC NOT NULL DEFAULT 0,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 
 -- 3. Enable Row Level Security (RLS)
-ALTER TABLE public.reviews ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.orders ENABLE ROW LEVEL SECURITY;
 
--- 4. Reviews RLS Policies
--- Anyone can view product reviews
-DROP POLICY IF EXISTS "Public can view reviews" ON public.reviews;
-CREATE POLICY "Public can view reviews" ON public.reviews FOR SELECT USING (true);
+-- 4. Profiles RLS Policies: User can read, insert and update only their own row
+DROP POLICY IF EXISTS "Users can read own profile" ON public.profiles;
+CREATE POLICY "Users can read own profile" ON public.profiles FOR SELECT USING (auth.uid() = id);
 
--- Logged-in users can insert a review with their user_id
-DROP POLICY IF EXISTS "Users can insert own reviews" ON public.reviews;
-CREATE POLICY "Users can insert own reviews" ON public.reviews FOR INSERT WITH CHECK (auth.uid() = user_id);
+DROP POLICY IF EXISTS "Users can insert own profile" ON public.profiles;
+CREATE POLICY "Users can insert own profile" ON public.profiles FOR INSERT WITH CHECK (auth.uid() = id);
 
--- A user can delete their own review, or admin can delete any review
-DROP POLICY IF EXISTS "User or admin can delete review" ON public.reviews;
-CREATE POLICY "User or admin can delete review" ON public.reviews FOR DELETE USING (
-  auth.uid() = user_id OR auth.jwt() ->> 'email' = 'admin@aura.com'
-);
+DROP POLICY IF EXISTS "Users can update own profile" ON public.profiles;
+CREATE POLICY "Users can update own profile" ON public.profiles FOR UPDATE USING (auth.uid() = id) WITH CHECK (auth.uid() = id);
 
 -- 5. Orders RLS Policies
--- Logged-in users can insert their own orders
-DROP POLICY IF EXISTS "Users can insert own orders" ON public.orders;
-CREATE POLICY "Users can insert own orders" ON public.orders FOR INSERT WITH CHECK (auth.uid() = user_id);
-
--- Logged-in users can view their own orders, and admin can view all orders
+-- Users can view their own orders; admin can view all
 DROP POLICY IF EXISTS "Users or admin can view orders" ON public.orders;
 CREATE POLICY "Users or admin can view orders" ON public.orders FOR SELECT USING (
   auth.uid() = user_id OR auth.jwt() ->> 'email' = 'admin@aura.com'
 );
+
+-- Users can insert their own orders
+DROP POLICY IF EXISTS "Users can insert own orders" ON public.orders;
+CREATE POLICY "Users can insert own orders" ON public.orders FOR INSERT WITH CHECK (auth.uid() = user_id);
+
+-- User can cancel their own order only while status is 'Placed'
+DROP POLICY IF EXISTS "Users can cancel placed orders" ON public.orders;
+CREATE POLICY "Users can cancel placed orders" ON public.orders FOR UPDATE USING (
+  auth.uid() = user_id AND status = 'Placed'
+) WITH CHECK (
+  auth.uid() = user_id AND status = 'Cancelled'
+);
+
+-- Admin can update any order status and delivery date
+DROP POLICY IF EXISTS "Admin can update any order" ON public.orders;
+CREATE POLICY "Admin can update any order" ON public.orders FOR UPDATE USING (
+  auth.jwt() ->> 'email' = 'admin@aura.com'
+) WITH CHECK (
+  auth.jwt() ->> 'email' = 'admin@aura.com'
+);
+
+-- Refresh PostgREST schema cache
+NOTIFY pgrst, 'reload schema';

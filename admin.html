@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AURA | Order Administration</title>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700;800&family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,400;1,500;1,600&family=Montserrat:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="db.js"></script>
+</head>
+<body>
+  <nav class="navbar">
+    <div class="logo"><a href="index.html">AURA<span>.</span></a></div>
+    <ul class="nav-links">
+      <li><a href="index.html">Home</a></li>
+      <li><a href="products.html">Collections</a></li>
+      <li><a href="cart.html">Cart (<span id="nav-cart-count">0</span>)</a></li>
+      <li><a href="login.html" id="nav-auth">Login</a></li>
+    </ul>
+  </nav>
+
+  <div class="container">
+    <div class="section-header">
+      <span class="gold-tag">Management Console</span>
+      <h2 class="page-title">Order Management</h2>
+      <p class="section-desc">Oversee client orders, status transitions, and logistics delivery schedules.</p>
+    </div>
+
+    <div id="admin-gate-content">
+      <div class="admin-table-container">
+        <table class="admin-orders-table">
+          <thead>
+            <tr>
+              <th>Order Code</th>
+              <th>Customer</th>
+              <th>Phone</th>
+              <th>Address</th>
+              <th>Total</th>
+              <th>Status</th>
+              <th>Delivery Date</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody id="admin-orders-body">
+            <tr><td colspan="8" style="text-align: center; padding: 30px;">Loading orders...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <footer class="footer">
+    <p>&copy; 2026 AURA Luxury Furniture. All Rights Reserved.</p>
+  </footer>
+
+  <script src="script.js"></script>
+  <script>
+    async function loadAdminOrders() {
+      var gate = document.getElementById("admin-gate-content");
+      if (!isAdmin()) {
+        gate.innerHTML = '<div class="checkout-box" style="text-align: center;"><h3 style="color: #e74c3c; margin-bottom: 12px;">Access Denied</h3><p style="color: var(--text-muted); margin-bottom: 20px;">You do not have administrative privileges to access this area.</p><a href="index.html" class="btn">Return to Home</a></div>';
+        return;
+      }
+
+      var orders = await getAllOrders();
+      var tbody = document.getElementById("admin-orders-body");
+
+      if (!orders || orders.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="8" style="text-align: center; padding: 30px;">No client orders recorded.</td></tr>';
+        return;
+      }
+
+      var h = "";
+      for (var i = 0; i < orders.length; i++) {
+        var o = orders[i];
+        var code = o.order_code || o.id;
+        var st = o.status || "Placed";
+        var curDate = o.delivery_date || "";
+
+        h += '<tr id="row-' + o.id + '">';
+        h += '<td><strong>' + code + '</strong></td>';
+        h += '<td>' + clean(o.name) + '</td>';
+        h += '<td>' + clean(o.phone) + '</td>';
+        h += '<td style="max-width: 200px; font-size: 12px;">' + clean(o.address) + '</td>';
+        h += '<td><span class="gold-text">$' + o.total + '</span></td>';
+
+        h += '<td>';
+        h += '<select id="status-' + o.id + '" class="admin-select">';
+        var opts = ["Placed", "Packed", "Shipped", "Delivered", "Cancelled"];
+        for (var k = 0; k < opts.length; k++) {
+          h += '<option value="' + opts[k] + '"' + (opts[k] === st ? ' selected' : '') + '>' + opts[k] + '</option>';
+        }
+        h += '</select>';
+        h += '</td>';
+
+        h += '<td>';
+        h += '<input type="date" id="date-' + o.id + '" value="' + curDate + '" class="admin-date-input">';
+        h += '</td>';
+
+        h += '<td>';
+        h += '<div style="display: flex; align-items: center; gap: 8px;">';
+        h += '<button class="btn-small" onclick="handleUpdateOrder(\'' + o.id + '\')">Update</button>';
+        h += '<span id="msg-' + o.id + '" class="admin-success-tick" style="display: none; color: #2ecc71; font-size: 13px; font-weight: bold;">Updated ✓</span>';
+        h += '</div>';
+        h += '</td>';
+
+        h += '</tr>';
+      }
+      tbody.innerHTML = h;
+    }
+
+    async function handleUpdateOrder(id) {
+      var status = document.getElementById("status-" + id).value;
+      var date = document.getElementById("date-" + id).value;
+      var msg = document.getElementById("msg-" + id);
+
+      var res = await updateOrder(id, status, date);
+      if (res.success) {
+        msg.style.display = "inline";
+        setTimeout(function () {
+          msg.style.display = "none";
+        }, 2000);
+      } else {
+        alert("Failed to update order: " + res.error);
+      }
+    }
+
+    window.addEventListener("DOMContentLoaded", function () {
+      loadAdminOrders();
+    });
+  </script>
+</body>
+</html>

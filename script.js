@@ -119,13 +119,40 @@ async function checkout(event) {
     return;
   }
 
+  // Save to profile if checkbox is checked
+  var saveAddressChk = document.getElementById("save-address-chk");
+  if (saveAddressChk && saveAddressChk.checked) {
+    await saveProfile(name, phone, addr);
+  }
+
   localStorage.removeItem("aura_cart"); saveCart([]);
   document.getElementById("checkout-form-box").style.display = "none";
   document.getElementById("confirmation-box").style.display = "block";
-  document.getElementById("confirmed-order-id").textContent = res.orderId;
+  document.getElementById("confirmed-order-id").textContent = res.orderCode || res.orderId;
   document.getElementById("confirmed-name").textContent = name;
   document.getElementById("confirmed-phone").textContent = phone;
   document.getElementById("confirmed-address").textContent = addr;
+
+  var delEl = document.getElementById("confirmed-delivery-date");
+  if (delEl) delEl.textContent = res.deliveryDate ? new Date(res.deliveryDate).toLocaleDateString() : "Within 5 days";
+
+  var totEl = document.getElementById("confirmed-total");
+  if (totEl) totEl.textContent = "$" + res.total;
+
+  var itemsListEl = document.getElementById("confirmed-items-list");
+  if (itemsListEl && res.items) {
+    var ih = "";
+    for (var k = 0; k < res.items.length; k++) {
+      var item = res.items[k];
+      ih += '<div class="order-item-tile">';
+      ih += '<img src="' + item.image + '" alt="' + item.name + '">';
+      ih += '<div style="flex: 1;"><h4 style="font-size: 14px; margin-bottom: 2px;">' + item.name + '</h4><p style="font-size: 12px; color: var(--text-muted);">Qty: ' + item.quantity + ' &times; $' + item.price + '</p></div>';
+      ih += '<span class="gold-text">$' + (item.price * item.quantity) + '</span>';
+      ih += '</div>';
+    }
+    itemsListEl.innerHTML = ih;
+  }
+
   var payConfirm = document.getElementById("confirmed-payment");
   if (payConfirm) {
     var labels = { UPI: "UPI Payment", COD: "Cash on Delivery (COD)", Card: "Credit / Debit Card", NetBanking: "Net Banking" };

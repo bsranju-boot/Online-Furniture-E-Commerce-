@@ -855,3 +855,206 @@ h1, h2, h3, .section-title, .page-title, .logo a {
     flex-direction: column;
   }
 }
+
+/* Order Management, Tracking & Profile Styles */
+.order-card-box {
+  background-color: var(--card-bg);
+  border: 1px solid var(--gold-border);
+  border-radius: var(--radius-main);
+  padding: 30px;
+  margin-bottom: 25px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+  transition: border-color 0.3s ease;
+}
+.order-card-box:hover {
+  border-color: var(--gold-light);
+}
+.order-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid rgba(201, 162, 39, 0.2);
+  padding-bottom: 16px;
+  margin-bottom: 18px;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+/* 4-Step Progress Bar */
+.order-progress-track {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 24px 0 20px;
+  position: relative;
+}
+.progress-step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+  z-index: 2;
+}
+.step-circle {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: #181818;
+  border: 2px solid rgba(201, 162, 39, 0.3);
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 700;
+  transition: all 0.3s ease;
+}
+.step-label {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--text-muted);
+  margin-top: 8px;
+}
+.step-done .step-circle {
+  background: var(--gold-dark);
+  border-color: var(--gold);
+  color: #fff;
+}
+.step-done .step-label {
+  color: var(--text-main);
+}
+.step-active .step-circle {
+  background: var(--gold-gradient);
+  border-color: var(--gold-light);
+  color: #070707;
+  box-shadow: 0 0 14px rgba(201, 162, 39, 0.4);
+}
+.step-active .step-label {
+  color: var(--gold-light);
+  font-weight: 700;
+}
+.progress-line {
+  flex: 1;
+  height: 2px;
+  background: rgba(201, 162, 39, 0.2);
+  margin: 0 8px;
+  margin-bottom: 22px;
+  z-index: 1;
+}
+.progress-line.line-done {
+  background: var(--gold);
+}
+
+/* Status Badges */
+.status-badge {
+  display: inline-block;
+  padding: 6px 14px;
+  border-radius: var(--radius-btn);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  font-weight: 600;
+}
+.badge-placed { background: rgba(201, 162, 39, 0.2); color: var(--gold-light); border: 1px solid var(--gold); }
+.badge-packed, .badge-shipped { background: rgba(52, 152, 219, 0.2); color: #70a1ff; border: 1px solid #3498db; }
+.badge-delivered { background: rgba(46, 204, 113, 0.2); color: #2ecc71; border: 1px solid #2ecc71; }
+.badge-cancelled { background: rgba(231, 76, 60, 0.2); color: #e74c3c; border: 1px solid #e74c3c; }
+
+/* Order Item Tiles */
+.order-items-scroll {
+  border-top: 1px dashed rgba(201, 162, 39, 0.2);
+  padding-top: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.order-item-tile {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: #0d0d0d;
+  padding: 10px 14px;
+  border-radius: 12px;
+  border: 1px solid rgba(201, 162, 39, 0.15);
+}
+.order-item-tile img {
+  width: 50px;
+  height: 50px;
+  object-fit: cover;
+  border-radius: 8px;
+}
+
+/* Cancel Order Button */
+.btn-cancel-order {
+  background: transparent;
+  color: #e74c3c;
+  border: 1px solid #e74c3c;
+  border-radius: var(--radius-btn);
+  padding: 8px 18px;
+  font-family: var(--font-body);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+.btn-cancel-order:hover {
+  background: #e74c3c;
+  color: #fff;
+}
+
+/* Admin Orders Table */
+.admin-table-container {
+  overflow-x: auto;
+  background: var(--card-bg);
+  border: 1px solid var(--gold-border);
+  border-radius: var(--radius-main);
+  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.5);
+}
+.admin-orders-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+  font-size: 13px;
+}
+.admin-orders-table th {
+  background: #090909;
+  color: var(--gold-light);
+  padding: 16px 14px;
+  font-family: var(--font-heading);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  font-size: 11px;
+  border-bottom: 1px solid var(--gold-border);
+  white-space: nowrap;
+}
+.admin-orders-table td {
+  padding: 16px 14px;
+  border-bottom: 1px solid rgba(201, 162, 39, 0.15);
+  color: var(--text-main);
+  vertical-align: middle;
+}
+.admin-orders-table tr:hover td {
+  background: #161616;
+}
+.admin-select {
+  background: #0c0c0c;
+  border: 1px solid var(--gold-border);
+  color: var(--text-main);
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-family: var(--font-body);
+  font-size: 12px;
+  outline: none;
+}
+.admin-date-input {
+  background: #0c0c0c;
+  border: 1px solid var(--gold-border);
+  color: var(--text-main);
+  padding: 7px 10px;
+  border-radius: 8px;
+  font-family: var(--font-body);
+  font-size: 12px;
+  outline: none;
+}

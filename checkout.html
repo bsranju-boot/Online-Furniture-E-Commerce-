@@ -44,6 +44,11 @@
           <textarea id="cust-address" rows="4" placeholder="Enter your full residential or delivery address" required></textarea>
         </div>
 
+        <div class="form-group" style="display: flex; align-items: center; gap: 10px; margin-top: 10px;">
+          <input type="checkbox" id="save-address-chk" style="width: auto; margin: 0; cursor: pointer;">
+          <label for="save-address-chk" style="margin: 0; font-size: 13px; text-transform: none; cursor: pointer; color: var(--text-muted);">Save this address to my profile</label>
+        </div>
+
         <div class="form-group">
           <label for="cust-payment">Payment Method</label>
           <select id="cust-payment" onchange="togglePaymentDetails(this.value)" style="width: 100%; background-color: #0c0c0c; border: 1px solid var(--gold-border); color: var(--text-main); padding: 14px 20px; border-radius: var(--radius-main); font-family: var(--font-body); font-size: 14px; outline: none;">
@@ -99,14 +104,20 @@
       <h2>Order Placed Successfully!</h2>
       <p class="confirmation-sub">Thank you for investing in timeless luxury with AURA.</p>
       <div class="order-details">
-        <p><strong>Order ID:</strong> <span id="confirmed-order-id" class="gold-text"></span></p>
+        <p><strong>Order Code:</strong> <span id="confirmed-order-id" class="gold-text"></span></p>
         <p><strong>Client Name:</strong> <span id="confirmed-name"></span></p>
         <p><strong>Contact Phone:</strong> <span id="confirmed-phone"></span></p>
         <p><strong>Delivery Destination:</strong> <span id="confirmed-address"></span></p>
         <p><strong>Payment Mode:</strong> <span id="confirmed-payment" class="gold-text"></span></p>
+        <p><strong>Expected Delivery:</strong> <span id="confirmed-delivery-date" class="gold-text"></span></p>
       </div>
+
+      <div id="confirmed-items-list" class="order-items-scroll" style="margin-bottom: 24px;"></div>
+      <p style="font-size: 18px; margin-bottom: 20px;"><strong>Order Total: </strong><span id="confirmed-total" class="gold-text" style="font-size: 22px;"></span></p>
+
       <div style="margin-top: 25px; display: flex; gap: 15px; justify-content: center; flex-wrap: wrap;">
-        <a href="products.html" class="btn">Continue Exploring &rarr;</a>
+        <a href="my-orders.html" class="btn">View My Orders</a>
+        <a href="products.html" class="btn-link">Continue Exploring &rarr;</a>
       </div>
     </div>
   </div>
@@ -122,6 +133,20 @@
       document.getElementById('card-details').style.display = (mode === 'Card') ? 'block' : 'none';
       document.getElementById('netbanking-details').style.display = (mode === 'NetBanking') ? 'block' : 'none';
     }
+
+    window.addEventListener("DOMContentLoaded", async function () {
+      var user = getCurrentUser();
+      if (!user) {
+        window.location.href = "login.html?next=checkout.html";
+        return;
+      }
+      var prof = await getProfile();
+      if (prof) {
+        if (prof.name) document.getElementById("cust-name").value = prof.name;
+        if (prof.phone) document.getElementById("cust-phone").value = prof.phone;
+        if (prof.address) document.getElementById("cust-address").value = prof.address;
+      }
+    });
   </script>
 </body>
 </html>

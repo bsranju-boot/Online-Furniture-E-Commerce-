@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AURA | My Orders</title>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700;800&family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,400;1,500;1,600&family=Montserrat:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="db.js"></script>
+</head>
+<body>
+  <nav class="navbar">
+    <div class="logo"><a href="index.html">AURA<span>.</span></a></div>
+    <ul class="nav-links">
+      <li><a href="index.html">Home</a></li>
+      <li><a href="products.html">Collections</a></li>
+      <li><a href="cart.html">Cart (<span id="nav-cart-count">0</span>)</a></li>
+      <li><a href="login.html" id="nav-auth">Login</a></li>
+    </ul>
+  </nav>
+
+  <div class="container">
+    <div class="section-header">
+      <span class="gold-tag">Bespoke Acquisitions</span>
+      <h2 class="page-title">My Orders</h2>
+      <p class="section-desc">Track and manage your luxury furniture deliveries.</p>
+    </div>
+
+    <div id="orders-list-box" style="max-width: 820px; margin: 0 auto;">
+      <p class="empty-msg">Loading your order history...</p>
+    </div>
+  </div>
+
+  <footer class="footer">
+    <p>&copy; 2026 AURA Luxury Furniture. All Rights Reserved.</p>
+  </footer>
+
+  <script src="script.js"></script>
+  <script>
+    var steps = ["Placed", "Packed", "Shipped", "Delivered"];
+
+    function renderProgressBar(currentStatus) {
+      if (currentStatus === "Cancelled") {
+        return '<div style="margin: 16px 0;"><span class="status-badge badge-cancelled">Cancelled</span></div>';
+      }
+      var curIdx = steps.indexOf(currentStatus);
+      if (curIdx === -1) curIdx = 0;
+
+      var h = '<div class="order-progress-track">';
+      for (var i = 0; i < steps.length; i++) {
+        var isDone = (i <= curIdx);
+        var isCurrent = (i === curIdx);
+        h += '<div class="progress-step ' + (isDone ? 'step-done ' : '') + (isCurrent ? 'step-active' : '') + '">';
+        h += '<div class="step-circle">' + (i + 1) + '</div>';
+        h += '<span class="step-label">' + steps[i] + '</span>';
+        h += '</div>';
+        if (i < steps.length - 1) {
+          h += '<div class="progress-line ' + (i < curIdx ? 'line-done' : '') + '"></div>';
+        }
+      }
+      h += '</div>';
+      return h;
+    }
+
+    async function loadOrders() {
+      var user = getCurrentUser();
+      if (!user) {
+        window.location.href = "login.html?next=my-orders.html";
+        return;
+      }
+
+      var box = document.getElementById("orders-list-box");
+      var orders = await getMyOrders();
+
+      if (!orders || orders.length === 0) {
+        box.innerHTML = '<div class="checkout-box" style="text-align: center;"><p class="empty-msg">No orders yet.</p><a href="products.html" class="btn">Explore Collections</a></div>';
+        return;
+      }
+
+      var h = "";
+      for (var i = 0; i < orders.length; i++) {
+        var o = orders[i];
+        var code = o.order_code || o.id;
+        var placedDate = o.created_at ? new Date(o.created_at).toLocaleDateString() : "Recent";
+        var delDate = o.delivery_date ? new Date(o.delivery_date).toLocaleDateString() : "Within 5 days";
+        var items = o.items || [];
+
+        h += '<div class="order-card-box">';
+        h += '<div class="order-card-header">';
+        h += '<div><span class="gold-tag" style="font-size: 10px;">Order Code</span><h3 style="font-size: 18px; margin-top: 4px;">' + code + '</h3></div>';
+        h += '<div style="text-align: right;"><span style="font-size: 12px; color: var(--text-muted);">Placed: ' + placedDate + '</span><p class="gold-text" style="font-size: 20px; margin-top: 4px;">$' + o.total + '</p></div>';
+        h += '</div>';
+
+        h += renderProgressBar(o.status || "Placed");
+
+        h += '<div style="font-size: 13px; color: var(--text-muted); margin: 16px 0;">';
+        h += '<p><strong>Expected Delivery:</strong> ' + delDate + '</p>';
+        h += '<p><strong>Delivery Address:</strong> ' + clean(o.address) + '</p>';
+        h += '</div>';
+
+        h += '<div class="order-items-scroll">';
+        for (var j = 0; j < items.length; j++) {
+          var it = items[j];
+          h += '<div class="order-item-tile">';
+          h += '<img src="' + it.image + '" alt="' + it.name + '">';
+          h += '<div style="flex: 1;">';
+          h += '<h4 style="font-size: 14px; color: var(--text-main); margin-bottom: 2px;">' + it.name + '</h4>';
+          h += '<p style="font-size: 12px; color: var(--text-muted);">Qty: ' + it.quantity + ' &times; $' + it.price + '</p>';
+          h += '</div>';
+          h += '<span class="gold-text" style="font-size: 14px;">$' + (it.price * it.quantity) + '</span>';
+          h += '</div>';
+        }
+        h += '</div>';
+
+        if (o.status === "Placed") {
+          h += '<div style="text-align: right; margin-top: 16px;">';
+          h += '<button class="btn-cancel-order" onclick="handleCancelOrder(\'' + o.id + '\')">Cancel Order</button>';
+          h += '</div>';
+        }
+
+        h += '</div>';
+      }
+      box.innerHTML = h;
+    }
+
+    async function handleCancelOrder(id) {
+      if (!confirm("Are you sure you wish to cancel this order?")) return;
+      var res = await cancelOrder(id);
+      if (res.success) {
+        loadOrders();
+      } else {
+        alert("Cancellation failed: " + res.error);
+      }
+    }
+
+    window.addEventListener("DOMContentLoaded", function () {
+      loadOrders();
+    });
+  </script>
+</body>
+</html>
