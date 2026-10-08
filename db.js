@@ -1,17 +1,10 @@
-// Load or initialize localStorage collection
-function load(key, fallback) {
-  var d = localStorage.getItem(key);
-  if (!d) { localStorage.setItem(key, JSON.stringify(fallback)); return fallback; }
-  try { return JSON.parse(d); } catch (e) { return fallback; }
-}
+var SUPABASE_URL = "https://qtjuujbvcjiansiuyhth.supabase.co";
+var SUPABASE_ANON_KEY = "PASTE_YOUR_ANON_KEY_HERE";
+var ADMIN_EMAIL = "admin@aura.com";
+var db = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
 
-// Save data directly into localStorage
-function save(key, data) {
-  localStorage.setItem(key, JSON.stringify(data));
-}
-
-// Initial 8 luxury furniture products
-var defaultProducts = [
+// Local furniture products catalog
+var products = [
   { id: 1, name: "Imperial Velvet Sofa", price: 1250, category: "Sofa", image: "images/sofa1.jpg", description: "Tufted velvet sofa with brass legs." },
   { id: 2, name: "Regal Leather Sectional", price: 1850, category: "Sofa", image: "images/sofa2.jpg", description: "Italian modular leather luxury sofa." },
   { id: 3, name: "Majestic Oak King Bed", price: 2100, category: "Bed", image: "images/bed1.jpg", description: "Smoked oak king bed frame." },
@@ -22,84 +15,89 @@ var defaultProducts = [
   { id: 8, name: "Executive Walnut Work Desk", price: 1150, category: "Table", image: "images/table2.jpg", description: "Walnut study desk with hardware." }
 ];
 
-// Seed default users for authentication
-var defaultUsers = [
-  { email: "admin@aura.com", password: "admin123", name: "Admin", role: "admin" },
-  { email: "ranju@aura.com", password: "ranju123", name: "Ranju", role: "customer" }
-];
-
-// Seed default reviews for products
-var defaultReviews = [
-  { id: 1, productId: 1, user: "Ranju", rating: 5, comment: "Exquisite tufted craftsmanship and velvety comfort.", date: "2026-03-15" },
-  { id: 2, productId: 1, user: "Eleanor", rating: 4, comment: "Stunning focal centerpiece for our main parlour.", date: "2026-03-20" },
-  { id: 3, productId: 3, user: "Marcus", rating: 5, comment: "Solid oak construction with impeccable timeless joinery.", date: "2026-04-02" }
-];
-
-// Master products array loaded from database
-var products = load("aura_products", defaultProducts);
-
-// Clean user input to prevent HTML injection
+// Clean input to escape HTML tags
 function clean(str) {
   if (!str) return "";
   return String(str).split("<").join("&lt;").split(">").join("&gt;");
 }
 
-// Convert numeric rating to star symbols
+// Convert numeric rating to stars string
 function stars(num) {
   var s = "", n = parseInt(num) || 0;
   for (var i = 1; i <= 5; i++) s += (i <= n) ? "★" : "☆";
   return s;
 }
 
-// Register a new customer user account
-function signup(name, email, password) {
-  var users = load("aura_users", defaultUsers);
-  email = email.toLowerCase().trim();
-  for (var i = 0; i < users.length; i++) {
-    if (users[i].email.toLowerCase() === email) {
-      return { success: false, error: "Email is already registered." };
-    }
-  }
-  var newUser = { email: email, password: password, name: name.trim(), role: "customer" };
-  users.push(newUser);
-  save("aura_users", users);
-  save("aura_current_user", newUser);
-  return { success: true, user: newUser };
-}
-
-// Log in user with credentials verification
-function login(email, password) {
-  var users = load("aura_users", defaultUsers);
-  email = email.toLowerCase().trim();
-  for (var i = 0; i < users.length; i++) {
-    if (users[i].email.toLowerCase() === email && users[i].password === password) {
-      save("aura_current_user", users[i]);
-      return { success: true, user: users[i] };
-    }
-  }
-  return { success: false, error: "Invalid email or password." };
-}
-
-// Terminate current user session and refresh
-function logout() {
-  localStorage.removeItem("aura_current_user");
-  window.location.reload();
-}
-
-// Return currently logged in active user
+// Get saved user session data
 function getCurrentUser() {
-  var u = localStorage.getItem("aura_current_user");
-  if (!u) return null;
-  try { return JSON.parse(u); } catch (e) { return null; }
+  var s = localStorage.getItem("aura_session");
+  if (!s) return null;
+  try { return JSON.parse(s); } catch (e) { return null; }
 }
 
-// Update authentication link in the navbar
+// Check if current user is admin
+function isAdmin() {
+  var u = getCurrentUser();
+  return u && u.email && u.email.toLowerCase() === ADMIN_EMAIL.toLowerCase();
+}
+
+// Register user with Supabase Auth
+async function signup(name, email, password) {
+  try {
+    if (!db) return "Database not initialized.";
+    var res = await db.auth.signUp({
+      email: email.trim(),
+      password: password,
+      options: { data: { name: name.trim() } }
+    });
+    if (res.error) return res.error.message;
+    if (res.data && res.data.user) {
+      var u = { id: res.data.user.id, email: res.data.user.email, name: name.trim() };
+      localStorage.setItem("aura_session", JSON.stringify(u));
+    }
+    return "";
+  } catch (err) {
+    return err.message;
+  }
+}
+
+// Login user with Supabase Auth
+async function login(email, password) {
+  try {
+    if (!db) return "Database not initialized.";
+    var res = await db.auth.signInWithPassword({
+      email: email.trim(),
+      password: password
+    });
+    if (res.error) return "Invalid email or password.";
+    if (res.data && res.data.user) {
+      var meta = res.data.user.user_metadata || {};
+      var uName = meta.name || email.split("@")[0];
+      var u = { id: res.data.user.id, email: res.data.user.email, name: uName };
+      localStorage.setItem("aura_session", JSON.stringify(u));
+    }
+    return "";
+  } catch (err) {
+    return "Invalid email or password.";
+  }
+}
+
+// Log out active user session
+async function logout() {
+  try {
+    if (db) await db.auth.signOut();
+  } catch (e) {}
+  localStorage.removeItem("aura_session");
+  window.location.href = "index.html";
+}
+
+// Update authentication link in navbar
 function showAuthLink() {
   var el = document.getElementById("nav-auth");
   if (!el) return;
   var user = getCurrentUser();
   if (user) {
-    el.innerHTML = 'Logout (' + clean(user.name) + ')';
+    el.textContent = "Logout (" + user.name + ")";
     el.href = "#";
     el.onclick = function (e) {
       e.preventDefault();
@@ -112,76 +110,81 @@ function showAuthLink() {
   }
 }
 
-// Fetch all reviews matching a product ID
-function getReviews(productId) {
-  var all = load("aura_reviews", defaultReviews);
-  var res = [];
-  for (var i = 0; i < all.length; i++) {
-    if (all[i].productId === parseInt(productId)) res.push(all[i]);
+// Fetch product reviews from Supabase
+async function getReviews(productId) {
+  try {
+    if (!db) return [];
+    var res = await db.from("reviews").select("*").eq("product_id", productId).order("created_at", { ascending: false });
+    if (res.error) throw res.error;
+    return res.data || [];
+  } catch (err) {
+    return [];
   }
-  return res;
 }
 
-// Add a new review to database
-function addReview(productId, rating, comment) {
+// Insert new review into Supabase
+async function addReview(productId, rating, comment) {
   var user = getCurrentUser();
   if (!user) return { success: false, error: "Must be logged in to leave a review." };
-  var all = load("aura_reviews", defaultReviews);
-  var newRev = {
-    id: Date.now(),
-    productId: parseInt(productId),
-    user: user.name,
-    rating: parseInt(rating),
-    comment: clean(comment),
-    date: new Date().toISOString().split("T")[0]
-  };
-  all.unshift(newRev);
-  save("aura_reviews", all);
-  return { success: true, review: newRev };
-}
-
-// Remove review allowed for administrators only
-function removeReview(reviewId) {
-  var user = getCurrentUser();
-  if (!user || user.role !== "admin") return { success: false, error: "Admin access required." };
-  var all = load("aura_reviews", defaultReviews);
-  for (var i = 0; i < all.length; i++) {
-    if (all[i].id === parseInt(reviewId)) {
-      all.splice(i, 1);
-      save("aura_reviews", all);
-      return { success: true };
-    }
+  try {
+    if (!db) return { success: false, error: "Database not connected." };
+    var res = await db.from("reviews").insert([{
+      product_id: parseInt(productId),
+      user_id: user.id,
+      user_name: user.name,
+      rating: parseInt(rating),
+      comment: clean(comment)
+    }]);
+    if (res.error) throw res.error;
+    return { success: true };
+  } catch (err) {
+    return { success: false, error: err.message };
   }
-  return { success: false, error: "Review not found." };
 }
 
-// Save complete customer order to database
-function saveOrder(name, phone, address, cart) {
+// Delete review from Supabase (admin only)
+async function removeReview(id) {
+  if (!isAdmin()) return { success: false, error: "Admin access required." };
+  try {
+    if (!db) return { success: false, error: "Database not connected." };
+    var res = await db.from("reviews").delete().eq("id", id);
+    if (res.error) throw res.error;
+    return { success: true };
+  } catch (err) {
+    return { success: false, error: err.message };
+  }
+}
+
+// Save complete customer order in Supabase
+async function saveOrder(name, phone, address, cart) {
   var user = getCurrentUser();
   if (!user) return { success: false, error: "Must be logged in to place an order." };
-  var orders = load("aura_orders", []);
   var total = 0;
   for (var i = 0; i < cart.length; i++) total += cart[i].price * cart[i].quantity;
-  var newOrder = {
-    id: "AURA-" + Math.floor(10000 + Math.random() * 90000),
-    userEmail: user.email,
-    name: clean(name),
-    phone: clean(phone),
-    address: clean(address),
-    items: cart,
-    total: total,
-    date: new Date().toISOString().split("T")[0]
-  };
-  orders.push(newOrder);
-  save("aura_orders", orders);
-  return { success: true, order: newOrder };
+  var orderId = "AURA-" + Math.floor(10000 + Math.random() * 90000);
+  try {
+    if (!db) return { success: false, error: "Database not connected." };
+    var res = await db.from("orders").insert([{
+      id: orderId,
+      user_id: user.id,
+      name: clean(name),
+      phone: clean(phone),
+      address: clean(address),
+      items: cart,
+      total: total
+    }]);
+    if (res.error) throw res.error;
+    return { success: true, orderId: orderId };
+  } catch (err) {
+    return { success: false, error: err.message };
+  }
 }
 
-// Render product reviews and form inside box
-function showReviews(productId) {
+// Display reviews and form inside details page
+async function showReviews(productId) {
   var box = document.getElementById("reviews-box");
   if (!box) return;
-  var list = getReviews(productId);
+  var list = await getReviews(productId);
   var user = getCurrentUser();
   var h = '<div class="reviews-wrapper">';
   h += '<h3 class="reviews-title">Client Impressions</h3>';
@@ -212,16 +215,17 @@ function showReviews(productId) {
   } else {
     for (var j = 0; j < list.length; j++) {
       var r = list[j];
+      var d = r.created_at ? new Date(r.created_at).toISOString().split("T")[0] : "";
       h += '<div class="review-item">';
       h += '<div class="review-header">';
-      h += '<strong>' + clean(r.user) + '</strong>';
+      h += '<strong>' + clean(r.user_name) + '</strong>';
       h += '<span class="stars-gold">' + stars(r.rating) + '</span>';
       h += '</div>';
       h += '<p class="review-comment">' + clean(r.comment) + '</p>';
       h += '<div class="review-footer">';
-      h += '<small>' + clean(r.date) + '</small>';
-      if (user && user.role === "admin") {
-        h += '<button class="btn-delete-review" onclick="removeReview(' + r.id + '); showReviews(' + productId + ');">Delete</button>';
+      h += '<small>' + clean(d) + '</small>';
+      if (isAdmin()) {
+        h += '<button class="btn-delete-review" onclick="deleteReview(' + r.id + ', ' + productId + ')">Delete</button>';
       }
       h += '</div>';
       h += '</div>';
@@ -231,16 +235,45 @@ function showReviews(productId) {
   box.innerHTML = h;
 }
 
-// Handle submission of review form
-function submitReview(event, productId) {
+// Handle submission of user review
+async function submitReview(event, productId) {
   event.preventDefault();
   var rating = document.getElementById("review-rating").value;
   var comment = document.getElementById("review-comment").value.trim();
   if (!comment) return;
-  var res = addReview(productId, rating, comment);
+  var res = await addReview(productId, rating, comment);
   if (res.success) {
     showReviews(productId);
   } else {
     alert(res.error);
   }
 }
+
+// Handle deletion of review by admin
+async function deleteReview(reviewId, productId) {
+  if (!confirm("Are you sure you want to delete this review?")) return;
+  var res = await removeReview(reviewId);
+  if (res.success) {
+    showReviews(productId);
+  } else {
+    alert(res.error);
+  }
+}
+
+// Initialize session state on page load
+window.addEventListener("DOMContentLoaded", async function () {
+  if (db && db.auth) {
+    try {
+      var sess = await db.auth.getSession();
+      if (!sess.data || !sess.data.session) {
+        localStorage.removeItem("aura_session");
+      }
+    } catch (e) {}
+  }
+  showAuthLink();
+  var detailsBox = document.getElementById("details-container");
+  if (detailsBox) {
+    var pid = parseInt(new URLSearchParams(window.location.search).get("id"));
+    if (pid) showReviews(pid);
+  }
+});

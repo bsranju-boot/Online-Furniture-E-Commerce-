@@ -75,8 +75,8 @@ function showCart() {
   box.innerHTML = h; if (sum) sum.textContent = "$" + total;
 }
 
-// Validate checkout and record order
-function checkout(event) {
+// Validate checkout and record order to Supabase
+async function checkout(event) {
   event.preventDefault();
   var err = document.getElementById("form-error");
   var user = getCurrentUser();
@@ -91,13 +91,20 @@ function checkout(event) {
   var cart = getCart();
   if (!cart.length) { err.textContent = "Your cart is empty. Please select furniture pieces before checking out."; return; }
 
-  var res = saveOrder(name, phone, addr, cart);
-  if (!res.success) { err.textContent = res.error; return; }
+  var btn = document.getElementById("checkout-submit-btn");
+  if (btn) { btn.disabled = true; btn.textContent = "Processing Order..."; }
+
+  var res = await saveOrder(name, phone, addr, cart);
+  if (!res.success) {
+    if (btn) { btn.disabled = false; btn.textContent = "Complete Purchase"; }
+    err.textContent = res.error;
+    return;
+  }
 
   localStorage.removeItem("aura_cart"); saveCart([]);
   document.getElementById("checkout-form-box").style.display = "none";
   document.getElementById("confirmation-box").style.display = "block";
-  document.getElementById("confirmed-order-id").textContent = res.order.id;
+  document.getElementById("confirmed-order-id").textContent = res.orderId;
   document.getElementById("confirmed-name").textContent = name;
   document.getElementById("confirmed-phone").textContent = phone;
   document.getElementById("confirmed-address").textContent = addr;
@@ -105,7 +112,6 @@ function checkout(event) {
 
 window.addEventListener("DOMContentLoaded", function () {
   saveCart(getCart());
-  showAuthLink();
   showProducts(products.slice(0, 4), "featured-products");
   if (document.getElementById("product-list")) showProducts(products, "product-list");
 
@@ -115,7 +121,6 @@ window.addEventListener("DOMContentLoaded", function () {
     var p = findProduct(pid);
     if (p) {
       d.innerHTML = '<img src="' + p.image + '" alt="' + p.name + '"><div class="details-content"><span class="details-badge">' + p.category + ' Collection</span><h2>' + p.name + '</h2><p class="details-price">$' + p.price + '</p><p class="details-desc">' + p.description + '</p><button class="btn" onclick="addToCart(' + p.id + ')">Add to Cart</button><a href="products.html" class="btn-link">&larr; Return to All Collections</a></div>';
-      showReviews(p.id);
     } else {
       d.innerHTML = '<p class="empty-msg">Product not found. <a href="products.html">Return to catalog</a></p>';
     }

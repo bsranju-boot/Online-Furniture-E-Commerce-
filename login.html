@@ -3,12 +3,146 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>AURA | Client Portal</title>
+  <title>AURA | Client Access</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700;800&family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,400;1,500;1,600&family=Montserrat:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="db.js"></script>
+  <style>
+    .auth-page-wrap {
+      min-height: calc(100vh - 180px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 40px 20px;
+    }
+    .auth-card-dark {
+      background: #121212;
+      border: 1px solid rgba(201, 162, 39, 0.3);
+      border-radius: 22px;
+      padding: 48px 40px;
+      width: 100%;
+      max-width: 440px;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6), 0 0 30px rgba(201, 162, 39, 0.1);
+      animation: authFadeUp 0.7s cubic-bezier(0.25, 0.8, 0.25, 1) forwards;
+      color: #f5f1e6;
+    }
+    @keyframes authFadeUp {
+      from { opacity: 0; transform: translateY(24px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .auth-header {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+    .auth-header h2 {
+      font-family: 'Cinzel', serif;
+      font-size: 28px;
+      letter-spacing: 2px;
+      color: #f5f1e6;
+      margin-bottom: 8px;
+      text-transform: uppercase;
+    }
+    .auth-header p {
+      font-family: 'Cormorant Garamond', Georgia, serif;
+      font-style: italic;
+      color: #a89f8a;
+      font-size: 17px;
+    }
+    .auth-switch-bar {
+      display: flex;
+      background: #090909;
+      border: 1px solid rgba(201, 162, 39, 0.2);
+      border-radius: 30px;
+      padding: 4px;
+      margin-bottom: 28px;
+    }
+    .auth-switch-tab {
+      flex: 1;
+      background: transparent;
+      border: none;
+      color: #a89f8a;
+      padding: 10px 16px;
+      border-radius: 24px;
+      font-family: 'Montserrat', sans-serif;
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+    .auth-switch-tab.active {
+      background: linear-gradient(135deg, #8a6d1a, #f5d77a 45%, #c9a227 70%, #8a6d1a);
+      color: #070707;
+      box-shadow: 0 4px 15px rgba(201, 162, 39, 0.3);
+    }
+    .auth-form-group {
+      margin-bottom: 20px;
+      text-align: left;
+    }
+    .auth-label {
+      display: block;
+      font-family: 'Montserrat', sans-serif;
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      color: #c9a227;
+      margin-bottom: 8px;
+    }
+    .auth-input {
+      width: 100%;
+      background: #181818;
+      border: 1px solid rgba(201, 162, 39, 0.25);
+      border-radius: 14px;
+      padding: 14px 18px;
+      color: #f5f1e6;
+      font-family: 'Montserrat', sans-serif;
+      font-size: 14px;
+      outline: none;
+      box-sizing: border-box;
+      transition: border-color 0.3s ease, box-shadow 0.3s ease;
+    }
+    .auth-input:focus {
+      border-color: #f5d77a;
+      box-shadow: 0 0 16px rgba(201, 162, 39, 0.3);
+    }
+    .auth-submit-btn {
+      width: 100%;
+      background: linear-gradient(135deg, #8a6d1a, #f5d77a 45%, #c9a227 70%, #8a6d1a);
+      color: #070707;
+      border: none;
+      border-radius: 14px;
+      padding: 14px;
+      font-family: 'Montserrat', sans-serif;
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      cursor: pointer;
+      box-shadow: 0 6px 20px rgba(201, 162, 39, 0.25);
+      transition: transform 0.3s ease, box-shadow 0.3s ease, opacity 0.3s ease;
+      margin-top: 10px;
+    }
+    .auth-submit-btn:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 25px rgba(201, 162, 39, 0.35);
+    }
+    .auth-submit-btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+    .auth-error {
+      color: #e74c3c;
+      font-size: 13px;
+      text-align: center;
+      margin-top: 14px;
+      min-height: 18px;
+    }
+  </style>
 </head>
 <body>
   <nav class="navbar">
@@ -21,51 +155,49 @@
     </ul>
   </nav>
 
-  <div class="container">
-    <div class="auth-card">
-      <div class="auth-tabs">
-        <button id="tab-login" class="auth-tab-btn active" onclick="switchTab('login')">Login</button>
-        <button id="tab-signup" class="auth-tab-btn" onclick="switchTab('signup')">Sign Up</button>
+  <div class="auth-page-wrap">
+    <div class="auth-card-dark">
+      <div class="auth-header">
+        <h2 id="auth-title">Welcome Back</h2>
+        <p id="auth-subtitle">Access your exclusive luxury interiors</p>
+      </div>
+
+      <div class="auth-switch-bar">
+        <button type="button" id="tab-login" class="auth-switch-tab active" onclick="switchTab('login')">Login</button>
+        <button type="button" id="tab-signup" class="auth-switch-tab" onclick="switchTab('signup')">Sign Up</button>
       </div>
 
       <!-- Login Form -->
       <form id="form-login" onsubmit="handleLogin(event)">
-        <div class="form-group">
-          <label for="login-email">Email Address</label>
-          <input type="email" id="login-email" placeholder="name@domain.com" required>
+        <div class="auth-form-group">
+          <label class="auth-label" for="login-email">Email Address</label>
+          <input type="email" id="login-email" class="auth-input" placeholder="client@domain.com" required>
         </div>
-        <div class="form-group">
-          <label for="login-pass">Password</label>
-          <input type="password" id="login-pass" placeholder="••••••••" required>
+        <div class="auth-form-group">
+          <label class="auth-label" for="login-pass">Password</label>
+          <input type="password" id="login-pass" class="auth-input" placeholder="••••••••" required>
         </div>
-        <p id="login-error" class="error-msg"></p>
-        <button type="submit" class="btn btn-full">Sign In</button>
+        <button type="submit" id="login-submit-btn" class="auth-submit-btn">Sign In</button>
+        <p id="login-error" class="auth-error"></p>
       </form>
 
       <!-- Sign Up Form -->
       <form id="form-signup" onsubmit="handleSignup(event)" style="display: none;">
-        <div class="form-group">
-          <label for="signup-name">Full Name</label>
-          <input type="text" id="signup-name" placeholder="Your name" required>
+        <div class="auth-form-group">
+          <label class="auth-label" for="signup-name">Full Name</label>
+          <input type="text" id="signup-name" class="auth-input" placeholder="Lady Eleanor" required>
         </div>
-        <div class="form-group">
-          <label for="signup-email">Email Address</label>
-          <input type="email" id="signup-email" placeholder="name@domain.com" required>
+        <div class="auth-form-group">
+          <label class="auth-label" for="signup-email">Email Address</label>
+          <input type="email" id="signup-email" class="auth-input" placeholder="client@domain.com" required>
         </div>
-        <div class="form-group">
-          <label for="signup-pass">Password (min 6 characters)</label>
-          <input type="password" id="signup-pass" placeholder="••••••••" minlength="6" required>
+        <div class="auth-form-group">
+          <label class="auth-label" for="signup-pass">Password</label>
+          <input type="password" id="signup-pass" class="auth-input" placeholder="•••••••• (min 6 characters)" minlength="6" required>
         </div>
-        <p id="signup-error" class="error-msg"></p>
-        <button type="submit" class="btn btn-full">Create Account</button>
+        <button type="submit" id="signup-submit-btn" class="auth-submit-btn">Create Account</button>
+        <p id="signup-error" class="auth-error"></p>
       </form>
-
-      <!-- Demo Credentials -->
-      <div class="demo-box">
-        <p><strong>Demo Accounts:</strong></p>
-        <p>Admin: <code>admin@aura.com</code> / <code>admin123</code></p>
-        <p>Customer: <code>ranju@aura.com</code> / <code>ranju123</code></p>
-      </div>
     </div>
   </div>
 
@@ -81,6 +213,8 @@
       document.getElementById('form-signup').style.display = isLogin ? 'none' : 'block';
       document.getElementById('tab-login').classList.toggle('active', isLogin);
       document.getElementById('tab-signup').classList.toggle('active', !isLogin);
+      document.getElementById('auth-title').textContent = isLogin ? 'Welcome Back' : 'Join The Circle';
+      document.getElementById('auth-subtitle').textContent = isLogin ? 'Access your exclusive luxury interiors' : 'Begin your journey with bespoke craftsmanship';
       document.getElementById('login-error').textContent = '';
       document.getElementById('signup-error').textContent = '';
     }
@@ -90,35 +224,51 @@
       return next ? next : 'index.html';
     }
 
-    function handleLogin(e) {
+    async function handleLogin(e) {
       e.preventDefault();
       var email = document.getElementById('login-email').value.trim();
       var pass = document.getElementById('login-pass').value.trim();
       var err = document.getElementById('login-error');
+      var btn = document.getElementById('login-submit-btn');
       err.textContent = '';
+
       if (!email || !pass) { err.textContent = 'Please enter both email and password.'; return; }
-      var res = login(email, pass);
-      if (res.success) {
+
+      btn.disabled = true;
+      btn.textContent = 'Please wait...';
+
+      var errMsg = await login(email, pass);
+      if (!errMsg) {
         window.location.href = getNextUrl();
       } else {
-        err.textContent = res.error;
+        err.textContent = errMsg;
+        btn.disabled = false;
+        btn.textContent = 'Sign In';
       }
     }
 
-    function handleSignup(e) {
+    async function handleSignup(e) {
       e.preventDefault();
       var name = document.getElementById('signup-name').value.trim();
       var email = document.getElementById('signup-email').value.trim();
       var pass = document.getElementById('signup-pass').value.trim();
       var err = document.getElementById('signup-error');
+      var btn = document.getElementById('signup-submit-btn');
       err.textContent = '';
-      if (!name || !email || !pass) { err.textContent = 'Please fill out all fields.'; return; }
+
+      if (!name || !email || !pass) { err.textContent = 'Please complete all fields.'; return; }
       if (pass.length < 6) { err.textContent = 'Password must be at least 6 characters.'; return; }
-      var res = signup(name, email, pass);
-      if (res.success) {
+
+      btn.disabled = true;
+      btn.textContent = 'Please wait...';
+
+      var errMsg = await signup(name, email, pass);
+      if (!errMsg) {
         window.location.href = getNextUrl();
       } else {
-        err.textContent = res.error;
+        err.textContent = errMsg;
+        btn.disabled = false;
+        btn.textContent = 'Create Account';
       }
     }
   </script>
