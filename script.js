@@ -1,13 +1,3 @@
-var products = [
-  { id: 1, name: "Imperial Velvet Sofa", price: 1250, category: "Sofa", image: "images/sofa1.jpg", description: "Tufted velvet sofa with brass legs." },
-  { id: 2, name: "Regal Leather Sectional", price: 1850, category: "Sofa", image: "images/sofa2.jpg", description: "Italian modular leather luxury sofa." },
-  { id: 3, name: "Majestic Oak King Bed", price: 2100, category: "Bed", image: "images/bed1.jpg", description: "Smoked oak king bed frame." },
-  { id: 4, name: "Nocturne Platform Bed", price: 1650, category: "Bed", image: "images/bed2.jpg", description: "Minimalist wooden bed with lighting." },
-  { id: 5, name: "Gilded Accent Lounge Chair", price: 680, category: "Chair", image: "images/chair1.jpg", description: "Curved velvet armchair in gold." },
-  { id: 6, name: "Artisan Leather Dining Chair", price: 390, category: "Chair", image: "images/chair2.jpg", description: "Solid walnut saddle leather chair." },
-  { id: 7, name: "Grand Marble Dining Table", price: 2450, category: "Table", image: "images/table1.jpg", description: "Polished marble table with pedestals." },
-  { id: 8, name: "Executive Walnut Work Desk", price: 1150, category: "Table", image: "images/table2.jpg", description: "Walnut study desk with hardware." }
-];
 var selectedCategory = "All";
 
 // Read cart items from storage
@@ -21,7 +11,10 @@ function saveCart(cart) {
 }
 
 // Find single product by ID
-function findProduct(id) { for (var i = 0; i < products.length; i++) if (products[i].id === id) return products[i]; return null; }
+function findProduct(id) {
+  for (var i = 0; i < products.length; i++) if (products[i].id === parseInt(id)) return products[i];
+  return null;
+}
 
 // Show product cards in container
 function showProducts(list, boxId) {
@@ -42,13 +35,18 @@ function filterProducts() {
   showProducts(res, "product-list");
 }
 
-function setCategory(cat) { selectedCategory = cat; var b = document.querySelectorAll(".filter-btn"); for (var i = 0; i < b.length; i++) b[i].classList.toggle("active", b[i].textContent.trim() === cat); filterProducts(); }
+function setCategory(cat) {
+  selectedCategory = cat;
+  var b = document.querySelectorAll(".filter-btn");
+  for (var i = 0; i < b.length; i++) b[i].classList.toggle("active", b[i].textContent.trim() === cat);
+  filterProducts();
+}
 
 // Add item to shopping cart
 function addToCart(id) {
   var p = findProduct(id); if (!p) return;
   var cart = getCart(), it = null;
-  for (var i = 0; i < cart.length; i++) if (cart[i].id === id) { it = cart[i]; break; }
+  for (var i = 0; i < cart.length; i++) if (cart[i].id === p.id) { it = cart[i]; break; }
   if (it) it.quantity += 1; else cart.push({ id: p.id, name: p.name, price: p.price, image: p.image, quantity: 1 });
   saveCart(cart);
   if (window.event && window.event.target && window.event.target.tagName === "BUTTON") {
@@ -77,95 +75,37 @@ function showCart() {
   box.innerHTML = h; if (sum) sum.textContent = "$" + total;
 }
 
-// Validate form and place order directly to database
-async function checkout(event) {
+// Validate checkout and record order
+function checkout(event) {
   event.preventDefault();
   var err = document.getElementById("form-error");
-  var name = document.getElementById("cust-name").value.trim(), phone = document.getElementById("cust-phone").value.trim(), addr = document.getElementById("cust-address").value.trim();
+  var user = getCurrentUser();
+  if (!user) { window.location.href = "login.html?next=checkout.html"; return; }
+
+  var name = document.getElementById("cust-name").value.trim();
+  var phone = document.getElementById("cust-phone").value.trim();
+  var addr = document.getElementById("cust-address").value.trim();
+
   if (!name || !phone || !addr) { err.textContent = "Please complete all fields to proceed with your order."; return; }
   if (phone.length !== 10 || isNaN(phone)) { err.textContent = "Please enter a valid 10-digit phone number."; return; }
-  var cart = getCart(); if (!cart.length) { err.textContent = "Your cart is empty. Please select furniture pieces before checking out."; return; }
-  
-  var total = 0;
-  for (var i = 0; i < cart.length; i++) total += cart[i].price * cart[i].quantity;
-  var orderId = "AURA-" + Math.floor(10000 + Math.random() * 90000);
+  var cart = getCart();
+  if (!cart.length) { err.textContent = "Your cart is empty. Please select furniture pieces before checking out."; return; }
 
-  if (typeof saveOrderToDB === "function") {
-    var btn = document.getElementById("checkout-submit-btn");
-    if (btn) btn.textContent = "Processing Order...";
-    var orderData = { id: orderId, customer_name: name, phone: phone, address: addr, total: total };
-    var res = await saveOrderToDB(orderData, cart);
-    if (!res.success && res.error) {
-      if (btn) btn.textContent = "Complete Purchase";
-      err.textContent = "Order error: " + res.error;
-      return;
-    }
-  }
+  var res = saveOrder(name, phone, addr, cart);
+  if (!res.success) { err.textContent = res.error; return; }
 
   localStorage.removeItem("aura_cart"); saveCart([]);
-  document.getElementById("checkout-form-box").style.display = "none"; document.getElementById("confirmation-box").style.display = "block";
-  document.getElementById("confirmed-order-id").textContent = orderId;
-  document.getElementById("confirmed-name").textContent = name; document.getElementById("confirmed-phone").textContent = phone; document.getElementById("confirmed-address").textContent = addr;
+  document.getElementById("checkout-form-box").style.display = "none";
+  document.getElementById("confirmation-box").style.display = "block";
+  document.getElementById("confirmed-order-id").textContent = res.order.id;
+  document.getElementById("confirmed-name").textContent = name;
+  document.getElementById("confirmed-phone").textContent = phone;
+  document.getElementById("confirmed-address").textContent = addr;
 }
 
-// Load and show product reviews directly inside product details
-async function showReviews(productId) {
-  var listEl = document.getElementById("reviews-list"), sumEl = document.getElementById("reviews-summary");
-  if (!listEl || typeof getReviewsForProduct !== "function") return;
-
-  var reviews = await getReviewsForProduct(productId);
-  if (!reviews || !reviews.length) {
-    if (sumEl) sumEl.innerHTML = '<span style="color:var(--text-muted);font-size:14px;">No reviews yet. Be the first client to review!</span>';
-    listEl.innerHTML = '<p class="empty-msg">No client reviews yet. Share your impression below!</p>';
-    return;
-  }
-  var totalRating = 0;
-  for (var i = 0; i < reviews.length; i++) totalRating += reviews[i].rating;
-  var avg = (totalRating / reviews.length).toFixed(1);
-  if (sumEl) sumEl.innerHTML = '<span class="gold-text" style="font-size:22px;font-weight:bold;">★ ' + avg + ' / 5.0</span> <span style="color:var(--text-muted);font-size:14px;margin-left:10px;">(' + reviews.length + ' verified reviews)</span>';
-
-  var h = "";
-  for (var i = 0; i < reviews.length; i++) {
-    var r = reviews[i];
-    var stars = "★★★★★".substring(0, r.rating) + "☆☆☆☆☆".substring(0, 5 - r.rating);
-    var dateStr = new Date(r.created_at).toLocaleDateString();
-    h += '<div class="review-card" style="background:var(--card-bg);border:1px solid var(--gold-border);border-radius:var(--radius-main);padding:18px;margin-bottom:15px;"><div style="display:flex;justify-content:space-between;margin-bottom:8px;"><strong style="font-size:15px;color:var(--gold-light);">' + (r.reviewer_name || 'Anonymous Client') + '</strong><span style="color:var(--gold-light);letter-spacing:2px;">' + stars + '</span></div><p style="font-size:14px;color:var(--text-main);margin-bottom:8px;">' + r.comment + '</p><small style="color:var(--text-muted);font-size:11px;">' + dateStr + '</small></div>';
-  }
-  listEl.innerHTML = h;
-}
-
-// Post a review directly without sign in
-async function postReview(event, productId) {
-  event.preventDefault();
-  var name = document.getElementById("reviewer-name").value.trim();
-  var rating = parseInt(document.getElementById("review-rating").value);
-  var comment = document.getElementById("review-comment").value.trim();
-  var errEl = document.getElementById("review-form-error");
-  if (errEl) errEl.textContent = "";
-
-  if (!name || !comment) {
-    if (errEl) errEl.textContent = "Please provide your name and comments.";
-    return;
-  }
-
-  var res = await insertReview({ product_id: productId, reviewer_name: name, rating: rating, comment: comment });
-  if (res.success) {
-    document.getElementById("review-comment").value = "";
-    showReviews(productId);
-  } else {
-    if (errEl) errEl.textContent = "Failed to post review: " + res.error;
-    else alert("Failed to post review: " + res.error);
-  }
-}
-
-window.addEventListener("DOMContentLoaded", async function () {
+window.addEventListener("DOMContentLoaded", function () {
   saveCart(getCart());
-
-  if (typeof getProductsFromDB === "function") {
-    var dbProds = await getProductsFromDB();
-    if (dbProds && dbProds.length) products = dbProds;
-  }
-
+  showAuthLink();
   showProducts(products.slice(0, 4), "featured-products");
   if (document.getElementById("product-list")) showProducts(products, "product-list");
 
