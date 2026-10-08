@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AURA | Client Registration</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700;800&family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,400;1,500;1,600&family=Montserrat:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="db.js"></script>
+</head>
+<body>
+  <nav class="navbar">
+    <div class="logo"><a href="index.html">AURA<span>.</span></a></div>
+    <ul class="nav-links">
+      <li><a href="index.html">Home</a></li>
+      <li><a href="products.html">Collections</a></li>
+      <li><a href="cart.html">Cart (<span id="nav-cart-count">0</span>)</a></li>
+      <li id="nav-auth-item"><a href="login.html">Login</a></li>
+    </ul>
+  </nav>
+
+  <div class="container">
+    <div class="section-header">
+      <span class="gold-tag">Join The Circle</span>
+      <h2 class="page-title">Create Account</h2>
+      <p class="section-desc">Create your profile to purchase items and track your luxury orders.</p>
+    </div>
+
+    <div class="checkout-box">
+      <form id="signup-form" onsubmit="handleSignup(event)">
+        <div class="form-group">
+          <label for="signup-email">Email Address</label>
+          <input type="email" id="signup-email" placeholder="name@domain.com" required>
+        </div>
+        <div class="form-group">
+          <label for="signup-pass">Password (minimum 6 characters)</label>
+          <input type="password" id="signup-pass" placeholder="••••••••" minlength="6" required>
+        </div>
+        <p id="auth-error" class="error-msg"></p>
+        <p id="auth-success" style="color: var(--gold-light); font-size: 14px; text-align: center; margin-bottom: 15px; display: none;"></p>
+        <button type="submit" class="btn btn-full">Register</button>
+      </form>
+      <p style="text-align: center; margin-top: 20px; font-size: 14px; color: var(--text-muted);">
+        Already have an account? <a href="login.html" class="btn-link">Sign In</a>
+      </p>
+    </div>
+  </div>
+
+  <footer class="footer">
+    <p>&copy; 2026 AURA Luxury Furniture. All Rights Reserved.</p>
+  </footer>
+
+  <script src="script.js"></script>
+  <script>
+    async function handleSignup(e) {
+      e.preventDefault();
+      var email = document.getElementById("signup-email").value.trim();
+      var pass = document.getElementById("signup-pass").value.trim();
+      var errEl = document.getElementById("auth-error");
+      var successEl = document.getElementById("auth-success");
+      errEl.textContent = "";
+      successEl.style.display = "none";
+
+      var res = await signUpUser(email, pass);
+      if (res.error) {
+        errEl.textContent = res.error;
+      } else {
+        successEl.textContent = "Account created! Redirecting to login...";
+        successEl.style.display = "block";
+        setTimeout(function () {
+          window.location.href = "login.html";
+        }, 1200);
+      }
+    }
+  </script>
+</body>
+</html>
