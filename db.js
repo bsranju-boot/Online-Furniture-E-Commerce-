@@ -1,16 +1,16 @@
 var SUPABASE_URL = "https://qtjuujbvcjiansiuyhth.supabase.co";
-var SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF0anV1amJ2Y2ppYW5zaXV5aHRoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTE0MzQzNzYsImV4cCI6MjEwNzAxMDM3Nn0.t_XU3GMS5ZcZXWTxozdJG0hCn_gpyIU7VuM4FvXurNY";
+var SUPABASE_ANON_KEY = "sb_publishable_6Nbb1RcUY_yVe99QEM9jjA_iwHFnU07";
 var ADMIN_EMAIL = "admin@aura.com";
 var db = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
 
 // Local furniture products catalog
 var products = [
-  { id: 1, name: "Imperial Velvet Sofa", price: 1250, category: "Sofa", image: "images/sofa1.jpg", description: "Tufted velvet sofa with brass legs." },
-  { id: 2, name: "Regal Leather Sectional", price: 1850, category: "Sofa", image: "images/sofa2.jpg", description: "Italian modular leather luxury sofa." },
-  { id: 3, name: "Majestic Oak King Bed", price: 2100, category: "Bed", image: "images/bed1.jpg", description: "Smoked oak king bed frame." },
-  { id: 4, name: "Nocturne Platform Bed", price: 1650, category: "Bed", image: "images/bed2.jpg", description: "Minimalist wooden bed with lighting." },
-  { id: 5, name: "Gilded Accent Lounge Chair", price: 680, category: "Chair", image: "images/chair1.jpg", description: "Curved velvet armchair in gold." },
-  { id: 6, name: "Artisan Leather Dining Chair", price: 390, category: "Chair", image: "images/chair2.jpg", description: "Solid walnut saddle leather chair." },
+  { id: 1, name: "Imperial Velvet Sofa", price: 125000, category: "Sofa", image: "images/sofa1.jpg", description: "Tufted velvet sofa with brass legs." },
+  { id: 2, name: "Regal Leather Sectional", price: 185000, category: "Sofa", image: "images/sofa2.jpg", description: "Italian modular leather luxury sofa." },
+  { id: 3, name: "Majestic Oak King Bed", price: 210000, category: "Bed", image: "images/bed1.jpg", description: "Smoked oak king bed frame." },
+  { id: 4, name: "Nocturne Platform Bed", price: 165000, category: "Bed", image: "images/bed2.jpg", description: "Minimalist wooden bed with lighting." },
+  { id: 5, name: "Gilded Accent Lounge Chair", price: 68000, category: "Chair", image: "images/chair1.jpg", description: "Curved velvet armchair in gold." },
+  { id: 6, name: "Artisan Leather Dining Chair", price: 39000, category: "Chair", image: "images/chair2.jpg", description: "Solid walnut saddle leather chair." },
   { id: 7, name: "Grand Marble Dining Table", price: 2450, category: "Table", image: "images/table1.jpg", description: "Polished marble table with pedestals." },
   { id: 8, name: "Executive Walnut Work Desk", price: 1150, category: "Table", image: "images/table2.jpg", description: "Walnut study desk with hardware." }
 ];

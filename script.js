@@ -23,7 +23,7 @@ function showProducts(list, boxId) {
   var h = "";
   for (var i = 0; i < list.length; i++) {
     var p = list[i];
-    h += '<div class="product-card"><div class="product-img-wrapper"><img src="' + p.image + '" alt="' + p.name + '"></div><div class="product-info"><span class="product-category">' + p.category + '</span><h3 class="product-title">' + p.name + '</h3><p class="product-price">$' + p.price + '</p><div class="product-actions"><a href="details.html?id=' + p.id + '" class="btn-small">Details</a><button class="btn-cart" onclick="addToCart(' + p.id + ')">Add to Cart</button></div></div></div>';
+    h += '<div class="product-card"><div class="product-img-wrapper"><img src="' + p.image + '" alt="' + p.name + '"></div><div class="product-info"><span class="product-category">' + p.category + '</span><h3 class="product-title">' + p.name + '</h3><p class="product-price">Rs ' + p.price + '</p><div class="product-actions"><a href="details.html?id=' + p.id + '" class="btn-small">Details</a><button class="btn-cart" onclick="addToCart(' + p.id + ')">Add to Cart</button></div></div></div>';
   }
   box.innerHTML = h;
 }
@@ -70,9 +70,9 @@ function showCart() {
   var h = "", total = 0;
   for (var i = 0; i < cart.length; i++) {
     var it = cart[i], sub = it.price * it.quantity; total += sub;
-    h += '<div class="cart-item-row"><img src="' + it.image + '" alt="' + it.name + '" class="cart-item-img"><div class="cart-item-info"><h4>' + it.name + '</h4><p class="cart-item-price">$' + it.price + ' each</p></div><div class="qty-control"><button class="qty-btn" onclick="changeQty(' + it.id + ',-1)">-</button><span>' + it.quantity + '</span><button class="qty-btn" onclick="changeQty(' + it.id + ',1)">+</button></div><p><strong class="gold-text">$' + sub + '</strong></p><button class="btn-remove" onclick="changeQty(' + it.id + ',-100)">Remove</button></div>';
+    h += '<div class="cart-item-row"><img src="' + it.image + '" alt="' + it.name + '" class="cart-item-img"><div class="cart-item-info"><h4>' + it.name + '</h4><p class="cart-item-price">Rs ' + it.price + ' each</p></div><div class="qty-control"><button class="qty-btn" onclick="changeQty(' + it.id + ',-1)">-</button><span>' + it.quantity + '</span><button class="qty-btn" onclick="changeQty(' + it.id + ',1)">+</button></div><p><strong class="gold-text">Rs ' + sub + '</strong></p><button class="btn-remove" onclick="changeQty(' + it.id + ',-100)">Remove</button></div>';
   }
-  box.innerHTML = h; if (sum) sum.textContent = "$" + total;
+  box.innerHTML = h; if (sum) sum.textContent = "Rs " + total.toFixed(2);
 }
 
 // Validate checkout and record order to Supabase
