@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AURA | Your Shopping Cart</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700;800&family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,400;1,500;1,600&family=Montserrat:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <nav class="navbar">
+    <div class="logo"><a href="index.html">AURA<span>.</span></a></div>
+    <ul class="nav-links">
+      <li><a href="index.html">Home</a></li>
+      <li><a href="products.html">Collections</a></li>
+      <li><a href="cart.html" class="active">Cart (<span id="nav-cart-count">0</span>)</a></li>
+    </ul>
+  </nav>
+
+  <div class="container">
+    <div class="section-header">
+      <span class="gold-tag">Review Your Bag</span>
+      <h2 class="page-title">Selected Furnishings</h2>
+    </div>
+
+    <div class="cart-layout">
+      <div class="cart-items" id="cart-container"></div>
+      <div class="cart-summary" id="cart-summary">
+        <h3>Order Summary</h3>
+        <p class="summary-row"><span>Estimated Total:</span> <span id="cart-total-price">$0</span></p>
+        <a href="checkout.html" id="checkout-btn" class="btn btn-full">Proceed to Checkout</a>
+        <a href="products.html" class="btn-link">&larr; Continue Exploring</a>
+      </div>
+    </div>
+  </div>
+
+  <footer class="footer">
+    <p>&copy; 2026 AURA Luxury Furniture. All Rights Reserved.</p>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>
