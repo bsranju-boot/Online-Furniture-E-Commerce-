@@ -32,6 +32,12 @@ img {
   color: transparent;
 }
 
+html {
+  overflow-x: hidden;
+  width: 100%;
+  scroll-behavior: smooth;
+}
+
 body {
   background-color: var(--bg-color);
   color: var(--text-main);
@@ -39,6 +45,7 @@ body {
   font-weight: 400;
   line-height: 1.7;
   min-height: 100vh;
+  width: 100%;
   display: flex;
   flex-direction: column;
   animation: pageFadeIn 0.9s var(--ease-luxury) forwards;
@@ -825,35 +832,138 @@ h1, h2, h3, .section-title, .page-title, .logo a {
   letter-spacing: 1px;
 }
 
-@media (max-width: 768px) {
-  .navbar {
-    flex-direction: column;
-    gap: 16px;
-    padding: 16px 20px;
-  }
-  .nav-links {
-    gap: 16px;
-  }
-  .hero h1 {
-    font-size: 36px;
-  }
-  .hero p {
-    font-size: 17px;
-  }
-  .container, .section {
-    padding-top: 50px;
-  }
-  .details-card {
-    flex-direction: column;
-    padding: 24px;
-  }
-  .details-card img {
-    max-width: 100%;
-    height: 280px;
-  }
-  .cart-layout {
-    flex-direction: column;
-  }
+/* Product Reviews Styles */
+.reviews-wrapper {
+  margin-top: 48px;
+  background-color: var(--card-bg);
+  border: 1px solid var(--gold-border);
+  border-radius: var(--radius-main);
+  padding: 36px;
+  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.5);
+}
+
+.reviews-title {
+  font-family: var(--font-heading);
+  font-size: 24px;
+  color: var(--text-main);
+  margin-bottom: 16px;
+}
+
+.reviews-summary {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding-bottom: 24px;
+  border-bottom: 1px solid rgba(201, 162, 39, 0.2);
+  margin-bottom: 28px;
+  flex-wrap: wrap;
+}
+
+.stars-gold {
+  color: var(--gold-light);
+  font-size: 18px;
+  letter-spacing: 2px;
+}
+
+.review-count {
+  color: var(--text-muted);
+  font-size: 13px;
+}
+
+.review-form {
+  background: #0d0d0d;
+  border: 1px solid rgba(201, 162, 39, 0.2);
+  border-radius: var(--radius-main);
+  padding: 24px;
+  margin-bottom: 32px;
+}
+
+.review-form h4 {
+  font-family: var(--font-heading);
+  font-size: 16px;
+  color: var(--gold-light);
+  margin-bottom: 16px;
+  letter-spacing: 1px;
+}
+
+.review-select, .review-textarea {
+  width: 100%;
+  background: #161616;
+  border: 1px solid var(--gold-border);
+  color: var(--text-main);
+  padding: 12px 16px;
+  border-radius: 12px;
+  font-family: var(--font-body);
+  font-size: 14px;
+  outline: none;
+  transition: border-color 0.3s ease;
+  box-sizing: border-box;
+}
+
+.review-select:focus, .review-textarea:focus {
+  border-color: var(--gold-light);
+}
+
+.review-auth-msg {
+  background: #0d0d0d;
+  border: 1px solid rgba(201, 162, 39, 0.2);
+  border-radius: var(--radius-main);
+  padding: 20px;
+  text-align: center;
+  margin-bottom: 30px;
+}
+
+.reviews-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.review-item {
+  background: #0d0d0d;
+  border: 1px solid rgba(201, 162, 39, 0.15);
+  border-radius: 14px;
+  padding: 18px 20px;
+}
+
+.review-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.review-comment {
+  font-size: 14px;
+  color: var(--text-main);
+  line-height: 1.6;
+  margin-bottom: 10px;
+}
+
+.review-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  color: var(--text-muted);
+  font-size: 12px;
+}
+
+.btn-delete-review {
+  background: transparent;
+  color: #e74c3c;
+  border: 1px solid rgba(231, 76, 60, 0.4);
+  border-radius: 6px;
+  padding: 4px 10px;
+  font-size: 11px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-delete-review:hover {
+  background: #e74c3c;
+  color: #fff;
 }
 
 /* Order Management, Tracking & Profile Styles */
@@ -883,10 +993,11 @@ h1, h2, h3, .section-title, .page-title, .logo a {
 /* 4-Step Progress Bar */
 .order-progress-track {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
   margin: 24px 0 20px;
   position: relative;
+  width: 100%;
 }
 .progress-step {
   display: flex;
@@ -894,6 +1005,8 @@ h1, h2, h3, .section-title, .page-title, .logo a {
   align-items: center;
   position: relative;
   z-index: 2;
+  flex: 1;
+  text-align: center;
 }
 .step-circle {
   width: 32px;
@@ -908,6 +1021,7 @@ h1, h2, h3, .section-title, .page-title, .logo a {
   font-size: 13px;
   font-weight: 700;
   transition: all 0.3s ease;
+  flex-shrink: 0;
 }
 .step-label {
   font-size: 11px;
@@ -915,6 +1029,7 @@ h1, h2, h3, .section-title, .page-title, .logo a {
   letter-spacing: 1px;
   color: var(--text-muted);
   margin-top: 8px;
+  word-break: break-word;
 }
 .step-done .step-circle {
   background: var(--gold-dark);
@@ -938,8 +1053,7 @@ h1, h2, h3, .section-title, .page-title, .logo a {
   flex: 1;
   height: 2px;
   background: rgba(201, 162, 39, 0.2);
-  margin: 0 8px;
-  margin-bottom: 22px;
+  margin: 15px -4px 0;
   z-index: 1;
 }
 .progress-line.line-done {
@@ -1007,6 +1121,7 @@ h1, h2, h3, .section-title, .page-title, .logo a {
 /* Admin Orders Table */
 .admin-table-container {
   overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
   background: var(--card-bg);
   border: 1px solid var(--gold-border);
   border-radius: var(--radius-main);
@@ -1014,6 +1129,7 @@ h1, h2, h3, .section-title, .page-title, .logo a {
 }
 .admin-orders-table {
   width: 100%;
+  min-width: 720px;
   border-collapse: collapse;
   text-align: left;
   font-size: 13px;
@@ -1057,4 +1173,512 @@ h1, h2, h3, .section-title, .page-title, .logo a {
   font-family: var(--font-body);
   font-size: 12px;
   outline: none;
+}
+
+/* ======================================================
+   RESPONSIVE DESIGN: TABLET DIMENSIONS (769px to 1024px)
+   ====================================================== */
+@media (min-width: 769px) and (max-width: 1024px) {
+  .navbar {
+    padding: 18px 30px;
+  }
+  .nav-links {
+    gap: 18px;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+  }
+  .nav-links a {
+    font-size: 12px;
+    letter-spacing: 1.2px;
+    padding: 6px 4px;
+  }
+  .hero {
+    min-height: 80vh;
+    padding: 100px 30px 60px;
+  }
+  .hero h1 {
+    font-size: 46px;
+  }
+  .hero p {
+    font-size: 19px;
+  }
+  .container, .section {
+    padding: 50px 24px;
+  }
+  .product-grid {
+    grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+    gap: 18px;
+  }
+  .details-card {
+    padding: 32px;
+    gap: 32px;
+  }
+  .details-card img {
+    max-width: 400px;
+    height: 380px;
+  }
+  .details-content {
+    min-width: 0;
+  }
+  .cart-layout {
+    gap: 24px;
+  }
+  .cart-items {
+    min-width: 0;
+    padding: 24px;
+  }
+  .cart-summary {
+    min-width: 260px;
+    padding: 24px;
+  }
+  .checkout-box, .confirmation-box {
+    padding: 32px 28px;
+  }
+}
+
+/* ======================================================
+   RESPONSIVE DESIGN: MOBILE DIMENSIONS (max-width: 768px)
+   ====================================================== */
+@media (max-width: 768px) {
+  /* Prevent horizontal scroll */
+  html, body {
+    overflow-x: hidden;
+    width: 100%;
+  }
+
+  /* Navbar */
+  .navbar {
+    flex-direction: column;
+    gap: 12px;
+    padding: 14px 16px;
+    border-radius: 0 0 16px 16px;
+    position: sticky;
+    top: 0;
+  }
+  .logo a {
+    font-size: 24px;
+    letter-spacing: 2px;
+  }
+  .nav-links {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: center;
+    gap: 8px 14px;
+    width: 100%;
+    padding: 0;
+    margin: 0;
+  }
+  .nav-links li {
+    display: inline-block;
+  }
+  .nav-links a {
+    font-size: 11px;
+    letter-spacing: 1px;
+    padding: 6px 8px;
+    white-space: nowrap;
+  }
+  #nav-cart-count {
+    min-width: 18px;
+    height: 18px;
+    font-size: 10px;
+    padding: 0 3px;
+    margin-left: 3px;
+  }
+
+  /* Hero Section */
+  .hero {
+    min-height: 72vh;
+    padding: 70px 16px 45px;
+  }
+  .hero-content {
+    max-width: 100%;
+  }
+  .hero-subtitle {
+    font-size: 10px;
+    letter-spacing: 1.2px;
+    margin-bottom: 12px;
+  }
+  .hero h1 {
+    font-size: 32px;
+    line-height: 1.2;
+    margin-bottom: 16px;
+  }
+  .hero p {
+    font-size: 16px;
+    margin-bottom: 26px;
+    line-height: 1.6;
+  }
+  .hero .btn {
+    padding: 12px 28px;
+    font-size: 12px;
+  }
+
+  /* Layout Containers & Section Titles */
+  .container, .section {
+    padding: 36px 16px 40px;
+  }
+  .section-header {
+    margin-bottom: 28px;
+  }
+  .section-title, .page-title {
+    font-size: 26px;
+    margin: 8px 0 12px;
+    letter-spacing: 1.5px;
+  }
+  .section-title::after, .page-title::after {
+    width: 60px;
+    margin-top: 10px;
+  }
+  .section-desc {
+    font-size: 15px;
+    line-height: 1.5;
+  }
+
+  /* Filter & Search Bar */
+  .filter-bar {
+    gap: 16px;
+    margin-bottom: 28px;
+  }
+  #search-input {
+    max-width: 100%;
+    padding: 12px 16px;
+    font-size: 16px; /* 16px prevents iOS Safari auto-zoom */
+    border-radius: 14px;
+  }
+  .category-buttons {
+    gap: 8px;
+    justify-content: center;
+  }
+  .filter-btn {
+    padding: 8px 14px;
+    font-size: 11px;
+    letter-spacing: 1px;
+  }
+
+  /* Product Catalog Grid */
+  .product-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+    max-width: 100%;
+  }
+  .product-card {
+    border-radius: 14px;
+  }
+  .product-img-wrapper, .product-card img {
+    height: 150px;
+  }
+  .product-info {
+    padding: 12px 10px;
+  }
+  .product-category {
+    font-size: 9px;
+    letter-spacing: 1px;
+    margin-bottom: 2px;
+  }
+  .product-title {
+    font-size: 13px;
+    line-height: 1.3;
+    margin: 3px 0 6px;
+  }
+  .product-price {
+    font-size: 15px;
+    margin-bottom: 10px;
+  }
+  .product-actions {
+    flex-direction: column;
+    gap: 6px;
+    width: 100%;
+  }
+  .btn-cart, .btn-secondary {
+    width: 100%;
+    padding: 8px 6px;
+    font-size: 10px;
+    letter-spacing: 0.8px;
+    text-align: center;
+    justify-content: center;
+  }
+
+  /* Product Details Page */
+  .details-card {
+    flex-direction: column;
+    padding: 20px 16px;
+    gap: 20px;
+    border-radius: 16px;
+  }
+  .details-card img {
+    max-width: 100%;
+    width: 100%;
+    height: 260px;
+    border-radius: 14px;
+  }
+  .details-content {
+    min-width: 0;
+    width: 100%;
+  }
+  .details-content h2 {
+    font-size: 24px;
+    line-height: 1.25;
+  }
+  .details-price {
+    font-size: 24px;
+    margin-bottom: 14px;
+  }
+  .details-desc {
+    font-size: 14px;
+    line-height: 1.6;
+    margin-bottom: 22px;
+  }
+
+  /* Reviews Box */
+  .reviews-wrapper {
+    padding: 22px 16px;
+    margin-top: 28px;
+    border-radius: 16px;
+  }
+  .reviews-title {
+    font-size: 20px;
+  }
+  .review-form {
+    padding: 16px 14px;
+    border-radius: 14px;
+  }
+  .review-select, .review-textarea {
+    font-size: 16px; /* 16px prevents iOS Safari auto-zoom */
+    padding: 10px 12px;
+  }
+
+  /* Cart Page */
+  .cart-layout {
+    flex-direction: column;
+    gap: 20px;
+  }
+  .cart-items {
+    min-width: 0;
+    width: 100%;
+    padding: 18px 14px;
+    border-radius: 16px;
+  }
+  .cart-summary {
+    min-width: 0;
+    width: 100%;
+    padding: 20px 16px;
+    border-radius: 16px;
+  }
+  .cart-item-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 0;
+  }
+  .cart-item-img {
+    width: 65px;
+    height: 65px;
+    border-radius: 12px;
+    flex-shrink: 0;
+  }
+  .cart-item-info {
+    flex: 1 1 calc(100% - 85px);
+  }
+  .cart-item-info h4 {
+    font-size: 15px;
+  }
+  .cart-item-price {
+    font-size: 13px;
+  }
+  .qty-control {
+    gap: 8px;
+  }
+  .qty-btn {
+    width: 28px;
+    height: 28px;
+    font-size: 14px;
+  }
+  .btn-remove {
+    font-size: 11px;
+    margin-left: auto;
+  }
+
+  /* Checkout, Profile & Confirmation Forms */
+  .checkout-box, .confirmation-box {
+    padding: 24px 16px;
+    border-radius: 16px;
+    width: 100%;
+  }
+  .form-group {
+    margin-bottom: 18px;
+  }
+  .form-group label {
+    font-size: 11px;
+  }
+  .form-group input, .form-group textarea, .form-group select {
+    font-size: 16px; /* 16px prevents iOS Safari auto-zoom */
+    padding: 12px 14px;
+    border-radius: 12px;
+  }
+  .order-details {
+    padding: 16px 12px;
+    border-radius: 14px;
+    margin: 20px 0;
+  }
+  .order-details p {
+    font-size: 13px;
+  }
+
+  /* My Orders & Order Tracking Progress Bar */
+  .order-card-box {
+    padding: 18px 14px;
+    border-radius: 16px;
+    margin-bottom: 18px;
+  }
+  .order-card-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+    padding-bottom: 12px;
+  }
+  .order-card-header > div {
+    text-align: left !important;
+  }
+  .order-progress-track {
+    margin: 18px 0 16px;
+  }
+  .step-circle {
+    width: 26px;
+    height: 26px;
+    font-size: 11px;
+    border-width: 1.5px;
+  }
+  .step-label {
+    font-size: 9px;
+    letter-spacing: 0.3px;
+    margin-top: 6px;
+  }
+  .progress-line {
+    margin: 12px -3px 0;
+  }
+  .order-item-tile {
+    padding: 8px 10px;
+    gap: 10px;
+  }
+  .order-item-tile img {
+    width: 42px;
+    height: 42px;
+  }
+
+  /* Benefits Section */
+  .benefits-section {
+    gap: 16px;
+  }
+  .benefit-card {
+    flex: 1 1 100%;
+    padding: 24px 18px;
+    border-radius: 16px;
+  }
+
+  /* Admin Console Table */
+  .admin-table-container {
+    border-radius: 14px;
+    margin-bottom: 20px;
+  }
+  .admin-orders-table th, .admin-orders-table td {
+    padding: 12px 10px;
+    font-size: 12px;
+  }
+  .admin-select, .admin-date-input {
+    font-size: 14px;
+    padding: 6px 8px;
+  }
+}
+
+/* ======================================================
+   RESPONSIVE DESIGN: SMALL MOBILE (max-width: 480px)
+   ====================================================== */
+@media (max-width: 480px) {
+  .navbar {
+    padding: 12px 12px;
+  }
+  .logo a {
+    font-size: 21px;
+  }
+  .nav-links {
+    gap: 6px 10px;
+  }
+  .nav-links a {
+    font-size: 10px;
+    letter-spacing: 0.8px;
+    padding: 5px 6px;
+  }
+  .hero {
+    min-height: 68vh;
+    padding: 60px 14px 40px;
+  }
+  .hero h1 {
+    font-size: 26px;
+  }
+  .hero p {
+    font-size: 14px;
+    margin-bottom: 22px;
+  }
+  .container, .section {
+    padding: 28px 12px 34px;
+  }
+  .section-title, .page-title {
+    font-size: 22px;
+  }
+  .product-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+  }
+  .product-img-wrapper, .product-card img {
+    height: 130px;
+  }
+  .product-info {
+    padding: 10px 8px;
+  }
+  .product-title {
+    font-size: 12px;
+  }
+  .product-price {
+    font-size: 14px;
+    margin-bottom: 8px;
+  }
+  .details-card img {
+    height: 210px;
+  }
+  .details-content h2 {
+    font-size: 21px;
+  }
+  .details-price {
+    font-size: 21px;
+  }
+  .cart-item-row {
+    gap: 10px;
+    padding: 12px 0;
+  }
+  .cart-item-img {
+    width: 60px;
+    height: 60px;
+  }
+  .cart-item-info {
+    flex: 1 1 calc(100% - 75px);
+  }
+  .qty-control {
+    gap: 6px;
+  }
+  .checkout-box, .confirmation-box {
+    padding: 20px 12px;
+  }
+  .step-label {
+    font-size: 8px;
+    letter-spacing: 0;
+  }
+  .order-card-box {
+    padding: 16px 12px;
+  }
+  .footer {
+    padding: 25px 14px;
+    font-size: 12px;
+  }
 }
